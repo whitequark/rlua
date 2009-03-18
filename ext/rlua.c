@@ -1,5 +1,5 @@
 #include <ruby.h> 
-#include <lua.h>
+#include <lua5.1/lua.h>
 
 static VALUE rlua_get_var(lua_State *state)
 {
