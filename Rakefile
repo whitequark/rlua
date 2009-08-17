@@ -3,7 +3,7 @@ require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s| 
   s.name = "rlua"
-  s.version = "0.1"
+  s.version = "0.9"
   s.author = "Peter Zotov"
   s.email = "whitequark@whitequark.ru"
   s.platform = Gem::Platform::RUBY
