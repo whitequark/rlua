@@ -162,7 +162,7 @@ static void rlua_load_string(lua_State* state, VALUE code)
   
   int retval = luaL_loadstring(state, RSTRING_PTR(code));
   if(retval == LUA_ERRMEM)
-    rb_raise(rb_eNoMemError, "cannot load Lua code", RSTRING_PTR(code));
+    rb_raise(rb_eNoMemError, "cannot load Lua code");
   else if(retval == LUA_ERRSYNTAX)
     rb_raise(rb_eSyntaxError, "%s", lua_tostring(state, -1));
 }
