@@ -482,7 +482,7 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
     lua_pop(state, 1);
   }
   
-  rlua_add_ref_finalizer(rbState, self, ref);
+  rlua_add_ref_finalizer(rbState, ref, self);
 
   rb_iv_set(self, "@ref", ref);
   
