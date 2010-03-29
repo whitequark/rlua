@@ -49,41 +49,41 @@ static VALUE rlua_get_var(lua_State *state)
   lua_pop(state, 1);
 
   switch(lua_type(state, -1)) {
-  	case LUA_TNONE:
-  	case LUA_TNIL:
-	    return Qnil;
-	  
-  	case LUA_TTHREAD:
-	    rb_warn("cannot pop LUA_TTHREAD");
-	    return Qnil;
-	  
-  	case LUA_TUSERDATA:
-	    rb_warn("cannot pop LUA_TUSERDATA");
-	    return Qnil;
-	  
-  	case LUA_TLIGHTUSERDATA:
-	    rb_warn("cannot pop LUA_TLIGHTUSERDATA");
+    case LUA_TNONE:
+    case LUA_TNIL:
+      return Qnil;
+
+    case LUA_TTHREAD:
+      rb_warn("cannot pop LUA_TTHREAD");
+      return Qnil;
+
+    case LUA_TUSERDATA:
+      rb_warn("cannot pop LUA_TUSERDATA");
+      return Qnil;
+
+    case LUA_TLIGHTUSERDATA:
+      rb_warn("cannot pop LUA_TLIGHTUSERDATA");
       return Qnil;
     
-	  case LUA_TBOOLEAN:
-	    return lua_toboolean(state, -1) ? Qtrue : Qfalse;
+    case LUA_TBOOLEAN:
+      return lua_toboolean(state, -1) ? Qtrue : Qfalse;
 
-  	case LUA_TNUMBER:
-	    return rb_float_new(lua_tonumber(state, -1));
+    case LUA_TNUMBER:
+      return rb_float_new(lua_tonumber(state, -1));
 
-  	case LUA_TSTRING: {
+    case LUA_TSTRING: {
       size_t length;
       const char* string;
-  	  string = lua_tolstring(state, -1, &length);
-	    return rb_str_new(string, length);
-	  }
-    
-  	case LUA_TTABLE:
-  	  return rb_funcall(cLuaTable, rb_intern("new"), 2, rbLuaState, rlua_makeref(state));
-    
-  	case LUA_TFUNCTION:
-  	  return rb_funcall(cLuaFunction, rb_intern("new"), 2, rbLuaState, rlua_makeref(state));
-	  
+      string = lua_tolstring(state, -1, &length);
+      return rb_str_new(string, length);
+    }
+
+    case LUA_TTABLE:
+      return rb_funcall(cLuaTable, rb_intern("new"), 2, rbLuaState, rlua_makeref(state));
+
+    case LUA_TFUNCTION:
+      return rb_funcall(cLuaFunction, rb_intern("new"), 2, rbLuaState, rlua_makeref(state));
+
     default:
       rb_bug("rlua_get_var: unknown type %s", lua_typename(state, lua_type(state, -1)));
   }
@@ -97,62 +97,62 @@ static void rlua_push_var(lua_State *state, VALUE value)
       break;
 
     case T_STRING:
-	    lua_pushlstring(state, RSTRING_PTR(value), RSTRING_LEN(value)); 
-	    break;
-  	
-  	case T_FIXNUM:
-	    lua_pushnumber(state, FIX2INT(value)); 
-	    break;
-  	
-  	case T_BIGNUM:
-  	case T_FLOAT:
- 	    lua_pushnumber(state, NUM2DBL(value)); 
-	    break;
-  	
-  	case T_ARRAY: {
+      lua_pushlstring(state, RSTRING_PTR(value), RSTRING_LEN(value)); 
+      break;
+
+    case T_FIXNUM:
+      lua_pushnumber(state, FIX2INT(value)); 
+      break;
+
+    case T_BIGNUM:
+    case T_FLOAT:
+       lua_pushnumber(state, NUM2DBL(value)); 
+       break;
+
+    case T_ARRAY: {
       int table, i;
-	    
-	    lua_newtable(state);
-	    table = lua_gettop(state);
- 	    for(i = 0; i < RARRAY_LEN(value); i++) {
-    		rlua_push_var(state, RARRAY_PTR(value)[i]);
-		    lua_rawseti(state, table, i+1);
+
+      lua_newtable(state);
+      table = lua_gettop(state);
+       for(i = 0; i < RARRAY_LEN(value); i++) {
+         rlua_push_var(state, RARRAY_PTR(value)[i]);
+         lua_rawseti(state, table, i+1);
       }
-	    break;
-	  }
-    
+      break;
+    }
+
     case T_HASH: {
       int i;
       VALUE keys;
-      
-	    lua_newtable(state);
-	    keys = rb_funcall(value, rb_intern("keys"), 0);
-	    for(i = 0; i < RARRAY_LEN(keys); i++) {
-	      VALUE key = RARRAY_PTR(keys)[i];
+
+      lua_newtable(state);
+        keys = rb_funcall(value, rb_intern("keys"), 0);
+        for(i = 0; i < RARRAY_LEN(keys); i++) {
+          VALUE key = RARRAY_PTR(keys)[i];
         lua_pushlstring(state, RSTRING_PTR(key), RSTRING_LEN(key)); 
         rlua_push_var(state, rb_hash_aref(value, key));
         lua_settable(state, -3);
       }
-	    break;
-	  }
-	  
-	  default:
-	    if(value == Qtrue || value == Qfalse) {
-	      lua_pushboolean(state, value == Qtrue);
-	    } else if(rb_obj_class(value) == cLuaTable || rb_obj_class(value) == cLuaFunction) {
+      break;
+    }
+
+    default:
+      if(value == Qtrue || value == Qfalse) {
+        lua_pushboolean(state, value == Qtrue);
+      } else if(rb_obj_class(value) == cLuaTable || rb_obj_class(value) == cLuaFunction) {
         lua_getfield(state, LUA_REGISTRYINDEX, "rlua");              // stack: |refs|...
         lua_rawgeti(state, -1, FIX2INT(rb_iv_get(value, "@ref")));   //        |objt|refs|...
         lua_remove(state, -2);                                       //        |objt|...
-	    } else if(rb_respond_to(value, rb_intern("call"))) {
-    	  VALUE rbLuaState;
-    	  lua_getfield(state, LUA_REGISTRYINDEX, "rlua_state");
-    	  rbLuaState = (VALUE) lua_touserdata(state, -1);
-    	  lua_pop(state, 1);
+      } else if(rb_respond_to(value, rb_intern("call"))) {
+        VALUE rbLuaState;
+        lua_getfield(state, LUA_REGISTRYINDEX, "rlua_state");
+        rbLuaState = (VALUE) lua_touserdata(state, -1);
+        lua_pop(state, 1);
 
-	      rlua_push_var(state, rb_funcall(cLuaFunction, rb_intern("new"), 2, rbLuaState, value));
-	    } else {
-  	    rb_raise(rb_eTypeError, "wrong argument type %s", rb_obj_classname(value));
-	    }
+        rlua_push_var(state, rb_funcall(cLuaFunction, rb_intern("new"), 2, rbLuaState, value));
+      } else {
+        rb_raise(rb_eTypeError, "wrong argument type %s", rb_obj_classname(value));
+      }
   }
 }
 
