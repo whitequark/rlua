@@ -1,6 +1,7 @@
 #include <ruby.h> 
 #include <lua5.1/lua.h>
 #include <lua5.1/lauxlib.h>
+#include <ctype.h>
 
 VALUE mLua, cLuaState, cLuaMultret, cLuaFunction, cLuaTable;
 
