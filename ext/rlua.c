@@ -297,6 +297,20 @@ static VALUE rbLuaTable_set(VALUE self, VALUE index, VALUE value)
   return value;
 }
 
+static VALUE rbLuaTable_equal(VALUE self, VALUE table)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  int equal;
+  rlua_push_var(state, self);           // stack: |this|...
+  rlua_push_var(state, table);          //        |tble|this|...
+  equal = lua_equal(state, -1, -2);     //        |tble|this|...
+  lua_pop(state, 2);                    //        ...
+
+  return equal ? Qtrue : Qfalse;
+}
+
 static VALUE rbLuaTable_rawget(VALUE self, VALUE index)
 {
   lua_State* state;
@@ -324,6 +338,20 @@ static VALUE rbLuaTable_rawset(VALUE self, VALUE index, VALUE value)
   lua_pop(state, 1);                               //        ...
 
   return value;
+}
+
+static VALUE rbLuaTable_rawequal(VALUE self, VALUE table)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  int equal;
+  rlua_push_var(state, self);           // stack: |this|...
+  rlua_push_var(state, table);          //        |tble|this|...
+  equal = lua_rawequal(state, -1, -2);  //        |tble|this|...
+  lua_pop(state, 2);                    //        ...
+
+  return equal ? Qtrue : Qfalse;
 }
 
 static VALUE rbLuaTable_get_metatable(VALUE self)
@@ -652,7 +680,9 @@ void Init_rlua()
   //rb_define_method(cLuaTable, "each", rbLuaTable_each, 0);
   //rb_define_method(cLuaTable, "to_a", rbLuaTable_to_array, 0);
   //rb_define_method(cLuaTable, "to_hash", rbLuaTable_to_hash, 0);
+  rb_define_method(cLuaTable, "__equal", rbLuaTable_rawequal, 1);
   rb_define_method(cLuaTable, "[]", rbLuaTable_get, 1);
   rb_define_method(cLuaTable, "[]=", rbLuaTable_set, 2);
+  rb_define_method(cLuaTable, "==", rbLuaTable_equal, 1);
   rb_define_method(cLuaTable, "method_missing", rbLuaTable_method_missing, -1);
 }
