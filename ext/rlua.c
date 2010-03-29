@@ -677,9 +677,6 @@ void Init_rlua()
   rb_define_method(cLuaTable, "__length", rbLuaTable_length, 0);
   rb_define_method(cLuaTable, "__get", rbLuaTable_rawget, 1);
   rb_define_method(cLuaTable, "__set", rbLuaTable_rawset, 2);
-  //rb_define_method(cLuaTable, "each", rbLuaTable_each, 0);
-  //rb_define_method(cLuaTable, "to_a", rbLuaTable_to_array, 0);
-  //rb_define_method(cLuaTable, "to_hash", rbLuaTable_to_hash, 0);
   rb_define_method(cLuaTable, "__equal", rbLuaTable_rawequal, 1);
   rb_define_method(cLuaTable, "[]", rbLuaTable_get, 1);
   rb_define_method(cLuaTable, "[]=", rbLuaTable_set, 2);
