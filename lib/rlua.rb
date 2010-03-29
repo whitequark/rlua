@@ -18,7 +18,6 @@ module Lua
       hash
     end
     
-    alias :to_ary :to_a
     def to_ary
       ary = []
       1.upto(__length) { |i|
@@ -30,6 +29,7 @@ module Lua
       }
       ary
     end
+    alias :to_a :to_ary
     
     def inspect(trace=[])
       if to_hash.empty?
