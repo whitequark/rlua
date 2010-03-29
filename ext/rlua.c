@@ -751,14 +751,79 @@ static int bootstrap_ipairs (lua_State *L) {
   return 3;
 }
 
+static int bootstrap_unpack (lua_State *L) {
+  int i, e, n;
+  luaL_checktype(L, 1, LUA_TTABLE);
+  i = luaL_optint(L, 2, 1);
+  e = luaL_opt(L, luaL_checkint, 3, luaL_getn(L, 1));
+  n = e - i + 1;  /* number of elements */
+  if (n <= 0) return 0;  /* empty range */
+  luaL_checkstack(L, n, "table too big to unpack");
+  for (; i<=e; i++)  /* push arg[i...e] */
+    lua_rawgeti(L, 1, i);
+  return n;
+}
+
+
+static int bootstrap_select (lua_State *L) {
+  int n = lua_gettop(L);
+  if (lua_type(L, 1) == LUA_TSTRING && *lua_tostring(L, 1) == '#') {
+    lua_pushinteger(L, n-1);
+    return 1;
+  }
+  else {
+    int i = luaL_checkint(L, 1);
+    if (i < 0) i = n + i;
+    else if (i > n) i = n;
+    luaL_argcheck(L, 1 <= i, 1, "index out of range");
+    return n - i;
+  }
+}
+
+static int bootstrap_assert (lua_State *L) {
+  luaL_checkany(L, 1);
+  if (!lua_toboolean(L, 1))
+    return luaL_error(L, "%s", luaL_optstring(L, 2, "assertion failed!"));
+  return lua_gettop(L);
+}
+
+static int bootstrap_pcall (lua_State *L) {
+  int status;
+  luaL_checkany(L, 1);
+  status = lua_pcall(L, lua_gettop(L) - 1, LUA_MULTRET, 0);
+  lua_pushboolean(L, (status == 0));
+  lua_insert(L, 1);
+  return lua_gettop(L);  /* return status + all results */
+}
+
+static int bootstrap_xpcall (lua_State *L) {
+  int status;
+  luaL_checkany(L, 2);
+  lua_settop(L, 2);
+  lua_insert(L, 1);  /* put error function under function to be called */
+  status = lua_pcall(L, 0, LUA_MULTRET, 1);
+  lua_pushboolean(L, (status == 0));
+  lua_replace(L, 1);
+  return lua_gettop(L);  /* return status + all results */
+}
+
 static const
-  struct { char* name; lua_CFunction func; } 
+  struct { char* name; lua_CFunction func; }
   stdlib[] = {
-    { "type", bootstrap_type },
-    { "next", bootstrap_next },
+    { "type",     bootstrap_type     },
+    { "next",     bootstrap_next     },
     { "tonumber", bootstrap_tonumber },
     { "tostring", bootstrap_tostring },
-};
+    { "unpack",   bootstrap_unpack   },
+    { "select",   bootstrap_select   },
+    { "error",    bootstrap_error    },
+    { "assert",   bootstrap_assert   },
+    { "pcall",    bootstrap_pcall    },
+    { "xpcall",   bootstrap_xpcall   },
+  };
+
+// deploy an absolute minimum of functions required to write Lua programs
+// most of them can be implemented with Ruby, but this is slow.
 
 static VALUE rbLua_bootstrap(VALUE self)
 {
