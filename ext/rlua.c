@@ -641,6 +641,147 @@ static VALUE rbLua_multret(VALUE self, VALUE args)
   return rb_funcall(cLuaMultret, rb_intern("new"), 1, args);
 }
 
+// bootstrap* are from Lua5.1 source
+
+static int bootstrap_tonumber (lua_State *L) {
+  int base = luaL_optint(L, 2, 10);
+  if (base == 10) {  /* standard conversion */
+    luaL_checkany(L, 1);
+    if (lua_isnumber(L, 1)) {
+      lua_pushnumber(L, lua_tonumber(L, 1));
+      return 1;
+    }
+  }
+  else {
+    const char *s1 = luaL_checkstring(L, 1);
+    char *s2;
+    unsigned long n;
+    luaL_argcheck(L, 2 <= base && base <= 36, 2, "base out of range");
+    n = strtoul(s1, &s2, base);
+    if (s1 != s2) {  /* at least one valid digit? */
+      while (isspace((unsigned char)(*s2))) s2++;  /* skip trailing spaces */
+      if (*s2 == '\0') {  /* no invalid trailing characters? */
+        lua_pushnumber(L, (lua_Number)n);
+        return 1;
+      }
+    }
+  }
+  lua_pushnil(L);  /* else not a number */
+  return 1;
+}
+
+static int bootstrap_tostring (lua_State *L) {
+  luaL_checkany(L, 1);
+  if (luaL_callmeta(L, 1, "__tostring"))  /* is there a metafield? */
+    return 1;  /* use its value */
+  switch (lua_type(L, 1)) {
+    case LUA_TNUMBER:
+      lua_pushstring(L, lua_tostring(L, 1));
+      break;
+    case LUA_TSTRING:
+      lua_pushvalue(L, 1);
+      break;
+    case LUA_TBOOLEAN:
+      lua_pushstring(L, (lua_toboolean(L, 1) ? "true" : "false"));
+      break;
+    case LUA_TNIL:
+      lua_pushliteral(L, "nil");
+      break;
+    default:
+      lua_pushfstring(L, "%s: %p", luaL_typename(L, 1), lua_topointer(L, 1));
+      break;
+  }
+  return 1;
+}
+
+static int bootstrap_error (lua_State *L) {
+  int level = luaL_optint(L, 2, 1);
+  lua_settop(L, 1);
+  if (lua_isstring(L, 1) && level > 0) {  /* add extra information? */
+    luaL_where(L, level);
+    lua_pushvalue(L, 1);
+    lua_concat(L, 2);
+  }
+  return lua_error(L);
+}
+
+static int bootstrap_type (lua_State *L) {
+  luaL_checkany(L, 1);
+  lua_pushstring(L, luaL_typename(L, 1));
+  return 1;
+}
+
+
+static int bootstrap_next (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_settop(L, 2);  /* create a 2nd argument if there isn't one */
+  if (lua_next(L, 1))
+    return 2;
+  else {
+    lua_pushnil(L);
+    return 1;
+  }
+}
+
+
+static int bootstrap_pairs (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushvalue(L, lua_upvalueindex(1));  /* return generator, */
+  lua_pushvalue(L, 1);  /* state, */
+  lua_pushnil(L);  /* and initial value */
+  return 3;
+}
+
+
+static int bootstrap_inext (lua_State *L) {
+  int i = luaL_checkint(L, 2);
+  luaL_checktype(L, 1, LUA_TTABLE);
+  i++;  /* next value */
+  lua_pushinteger(L, i);
+  lua_rawgeti(L, 1, i);
+  return (lua_isnil(L, -1)) ? 0 : 2;
+}
+
+
+static int bootstrap_ipairs (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushvalue(L, lua_upvalueindex(1));  /* return generator, */
+  lua_pushvalue(L, 1);  /* state, */
+  lua_pushinteger(L, 0);  /* and initial value */
+  return 3;
+}
+
+static const
+  struct { char* name; lua_CFunction func; } 
+  stdlib[] = {
+    { "type", bootstrap_type },
+    { "next", bootstrap_next },
+    { "tonumber", bootstrap_tonumber },
+    { "tostring", bootstrap_tostring },
+};
+
+static VALUE rbLua_bootstrap(VALUE self)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+  
+  int nf;
+  for(nf = 0; nf < sizeof(stdlib) / sizeof(stdlib[0]); nf++) {
+    lua_pushcclosure(state, stdlib[nf].func, 0);
+    lua_setglobal(state, stdlib[nf].name);
+  }
+  
+  lua_pushcfunction(state, bootstrap_next);
+  lua_pushcclosure(state, bootstrap_pairs, 1);
+  lua_setglobal(state, "pairs");
+  
+  lua_pushcfunction(state, bootstrap_inext);
+  lua_pushcclosure(state, bootstrap_ipairs, 1);
+  lua_setglobal(state, "ipairs");
+  
+  return Qtrue;
+}
+
 // float typed indexes
 // syntax errors
 // error handling
@@ -658,6 +799,7 @@ void Init_rlua()
   rb_define_method(cLuaState, "[]=", rbLua_setglobal, 2);
   rb_define_method(cLuaState, "method_missing", rbLua_method_missing, -1);
   rb_define_method(cLuaState, "new_table", rbLua_new_table, 0);
+  rb_define_method(cLuaState, "bootstrap", rbLua_bootstrap, 0);
   
   cLuaMultret = rb_define_class_under(mLua, "Multret", rb_cObject);
   rb_define_method(cLuaMultret, "initialize", rbLuaMultret_initialize, 1);
