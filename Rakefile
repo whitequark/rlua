@@ -8,7 +8,7 @@ spec = Gem::Specification.new do |s|
   s.email = "whitequark@whitequark.ru"
   s.platform = Gem::Platform::RUBY
   s.summary = "A simple Ruby-to-Lua glue library"
-  s.files = FileList["ext/*", "lib/*"].to_a
+  s.files = FileList["ext/*.c", "lib/*"].to_a
   s.extensions = 'ext/extconf.rb'
 end
 
