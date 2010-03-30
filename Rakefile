@@ -1,9 +1,9 @@
 require 'rubygems'
 require 'rake/gempackagetask'
 
-spec = Gem::Specification.new do |s| 
+spec = Gem::Specification.new do |s|
   s.name = "rlua"
-  s.version = "0.9.1"
+  s.version = "0.9.8"
   s.author = "Peter Zotov"
   s.email = "whitequark@whitequark.ru"
   s.platform = Gem::Platform::RUBY
@@ -11,7 +11,6 @@ spec = Gem::Specification.new do |s|
   s.files = FileList["ext/*", "lib/*"].to_a
   s.extensions = 'ext/extconf.rb'
 end
- 
-Rake::GemPackageTask.new(spec) do |pkg| 
+
+Rake::GemPackageTask.new(spec) do |pkg|
 end
- 

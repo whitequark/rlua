@@ -130,7 +130,7 @@ static void rlua_push_var(lua_State *state, VALUE value)
       keys = rb_funcall(value, rb_intern("keys"), 0);
       for(i = 0; i < RARRAY_LEN(keys); i++) {
         VALUE key = RARRAY_PTR(keys)[i];
-        lua_pushlstring(state, RSTRING_PTR(key), RSTRING_LEN(key)); 
+        rlua_push_var(state, key);
         rlua_push_var(state, rb_hash_aref(value, key));
         lua_settable(state, -3);
       }
