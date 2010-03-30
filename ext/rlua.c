@@ -216,10 +216,10 @@ static VALUE rbLuaTable_initialize(int argc, VALUE* argv, VALUE self)
   VALUE rbLuaState, ref;
   rb_scan_args(argc, argv, "11", &rbLuaState, &ref);
   
-  if(rb_obj_class(rbLuaState) != cLuaState)
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::State)", rb_obj_classname(rbLuaState));
-
-  rb_iv_set(self, "@rlua_state", rbLuaState);
+  VALUE stateSource = rb_obj_class(rbLuaState);
+  if(stateSource != cLuaState && stateSource != cLuaTable && stateSource != cLuaFunction)
+    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::State, Lua::Table or Lua::Function)",
+           rb_obj_classname(rbLuaState));
 
   VALUE rbState = rb_iv_get(rbLuaState, "@state");
   rb_iv_set(self, "@state", rbState);
@@ -560,12 +560,12 @@ static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)
 
 static VALUE rbLuaTable_get_metatable(VALUE self)
 {
-  return rbLua_get_metatable(rb_iv_get(self, "@rlua_state"), self);
+  return rbLua_get_metatable(self, self);
 }
 
 static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)
 {
-  return rbLua_set_metatable(rb_iv_get(self, "@rlua_state"), self, metatable);
+  return rbLua_set_metatable(self, self, metatable);
 }
 
 static VALUE rbLua_get_global(VALUE self, VALUE index)
