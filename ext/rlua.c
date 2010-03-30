@@ -296,20 +296,6 @@ static VALUE rbLuaTable_set(VALUE self, VALUE index, VALUE value)
   return value;
 }
 
-static VALUE rbLuaTable_equal(VALUE self, VALUE table)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  int equal;
-  rlua_push_var(state, self);           // stack: |this|...
-  rlua_push_var(state, table);          //        |tble|this|...
-  equal = lua_equal(state, -1, -2);     //        |tble|this|...
-  lua_pop(state, 2);                    //        ...
-
-  return equal ? Qtrue : Qfalse;
-}
-
 static VALUE rbLuaTable_rawget(VALUE self, VALUE index)
 {
   lua_State* state;
@@ -578,6 +564,20 @@ static VALUE rbLua_set_global(VALUE self, VALUE index, VALUE value)
   return rbLuaTable_set(rbLua_get_env(self), index, value);
 }
 
+static VALUE rbLua_equal(VALUE self, VALUE other)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  int equal;
+  rlua_push_var(state, self);           // stack: |this|...
+  rlua_push_var(state, other);          //        |othr|this|...
+  equal = lua_equal(state, -1, -2);     //        |othr|this|...
+  lua_pop(state, 2);                    //        ...
+
+  return equal ? Qtrue : Qfalse;
+}
+
 static VALUE rbLua_rawequal(VALUE self, VALUE other)
 {
   lua_State* state;
@@ -842,6 +842,8 @@ void Init_rlua()
   rb_define_method(cLuaFunction, "call", rbLuaFunction_call, -2);
   rb_define_method(cLuaFunction, "__env", rbLua_get_env, 0);
   rb_define_method(cLuaFunction, "__env=", rbLua_set_env, 1);
+  rb_define_method(cLuaFunction, "__equal", rbLua_rawequal, 1);
+  rb_define_method(cLuaFunction, "==", rbLua_equal, 1);
 
   cLuaTable = rb_define_class_under(mLua, "Table", rb_cObject);
   rb_define_singleton_method(cLuaTable, "next", rbLuaTable_next, 2);
@@ -854,6 +856,6 @@ void Init_rlua()
   rb_define_method(cLuaTable, "__equal", rbLua_rawequal, 1);
   rb_define_method(cLuaTable, "[]", rbLuaTable_get, 1);
   rb_define_method(cLuaTable, "[]=", rbLuaTable_set, 2);
-  rb_define_method(cLuaTable, "==", rbLuaTable_equal, 1);
+  rb_define_method(cLuaTable, "==", rbLua_equal, 1);
   rb_define_method(cLuaTable, "method_missing", rbLuaTable_method_missing, -1);
 }
