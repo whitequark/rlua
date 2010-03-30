@@ -365,7 +365,9 @@ static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)
     return rbLuaTable_set(self, name, value);
   } else {
     VALUE value = rbLuaTable_get(self, name);
-    if(rb_obj_class(value) != cLuaFunction) {
+    if(value == Qnil) {
+      return rb_call_super(argc, argv);
+    } else if(rb_obj_class(value) != cLuaFunction) {
       if(is_method)
         rb_raise(rb_eTypeError, "%s is not a Lua::Function", RSTRING_PTR(name));
       return value;
