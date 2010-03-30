@@ -542,13 +542,13 @@ static VALUE rbLua_set_env(VALUE self, VALUE env)
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
   
-  if(rb_obj_class(env) != cLuaTable)
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table)", rb_obj_classname(env));
+  if(rb_obj_class(env) != cLuaTable && TYPE(env) != T_HASH)
+    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table or Hash)", rb_obj_classname(env));
 
   rlua_push_var(state, self);                      // stack: |this|...
   rlua_push_var(state, env);                       //        |envi|this|...
   lua_setfenv(state, -2);                          //        |this|...
-  lua_pop(state, 2);                               //        ...
+  lua_pop(state, 1);                               //        ...
   
   return env;
 }
