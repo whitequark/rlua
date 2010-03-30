@@ -218,7 +218,9 @@ static VALUE rbLuaTable_initialize(int argc, VALUE* argv, VALUE self)
   
   if(rb_obj_class(rbLuaState) != cLuaState)
     rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::State)", rb_obj_classname(rbLuaState));
-  
+
+  rb_iv_set(self, "@rlua_state", rbLuaState);
+
   VALUE rbState = rb_iv_get(rbLuaState, "@state");
   rb_iv_set(self, "@state", rbState);
   
@@ -323,40 +325,6 @@ static VALUE rbLuaTable_rawset(VALUE self, VALUE index, VALUE value)
   lua_pop(state, 1);                               //        ...
 
   return value;
-}
-
-static VALUE rbLuaTable_get_metatable(VALUE self)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
-  VALUE value;
-  rlua_push_var(state, self);                      // stack: |this|...
-  if(lua_getmetatable(state, -1)) {                //        |meta|this|...
-    value = rlua_get_var(state);                   //        |meta|this|...
-    lua_pop(state, 2);                             //        ...
-  } else {                                         //        |this|...
-    value = Qnil;
-    lua_pop(state, 1);                             //        ...
-  }
-  
-  return value;
-}
-
-static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
-  if(!rb_obj_is_instance_of(metatable, cLuaTable))
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table)", rb_obj_classname(metatable));
-  
-  rlua_push_var(state, self);                      // stack: |refs|...
-  rlua_push_var(state, metatable);                 //        |meta|this|...
-  lua_setmetatable(state, -2);                     //        |this|...
-  lua_pop(state, 1);                               //        ...
-  
-  return metatable;
 }
 
 static VALUE rbLuaTable_length(VALUE self)
@@ -551,6 +519,51 @@ static VALUE rbLua_set_env(VALUE self, VALUE env)
   lua_pop(state, 1);                               //        ...
   
   return env;
+}
+
+static VALUE rbLua_get_metatable(VALUE self, VALUE object)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+  
+  rlua_push_var(state, object);                 // stack: |objt|...
+  if(lua_getmetatable(state, -1)) {             //        |meta|objt|...
+    VALUE ref = rlua_makeref(state);            //        |meta|objt|...
+    lua_pop(state, 2);                          //        ...
+    
+    return rb_funcall(cLuaTable, rb_intern("new"), 2, self, ref);
+  } else {                                      //        |objt|...
+    lua_pop(state, 1);                          //        ...
+    
+    return Qnil;
+  }
+
+}
+
+static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+  
+  if(rb_obj_class(metatable) != cLuaTable && TYPE(metatable) != T_HASH)
+    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table or Hash)", rb_obj_classname(metatable));
+
+  rlua_push_var(state, object);                    // stack: |objt|...
+  rlua_push_var(state, metatable);                 //        |meta|objt|...
+  lua_setmetatable(state, -2);                     //        |objt|...
+  lua_pop(state, 1);                               //        ...
+  
+  return metatable;
+}
+
+static VALUE rbLuaTable_get_metatable(VALUE self)
+{
+  return rbLua_get_metatable(rb_iv_get(self, "@rlua_state"), self);
+}
+
+static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)
+{
+  return rbLua_set_metatable(rb_iv_get(self, "@rlua_state"), self, metatable);
 }
 
 static VALUE rbLua_get_global(VALUE self, VALUE index)
@@ -814,11 +827,6 @@ static VALUE rbLua_bootstrap(VALUE self)
   return Qtrue;
 }
 
-// float typed indexes
-// syntax errors
-// error handling
-// userdata popping
-
 void Init_rlua()
 {
   mLua = rb_define_module("Lua");
@@ -829,6 +837,8 @@ void Init_rlua()
   rb_define_method(cLuaState, "__bootstrap", rbLua_bootstrap, 0);
   rb_define_method(cLuaState, "__env", rbLua_get_env, 0);
   rb_define_method(cLuaState, "__env=", rbLua_set_env, 1);
+  rb_define_method(cLuaState, "__get_metatable", rbLua_get_metatable, 1);
+  rb_define_method(cLuaState, "__set_metatable", rbLua_set_metatable, 2);
   rb_define_method(cLuaState, "[]", rbLua_get_global, 1);
   rb_define_method(cLuaState, "[]=", rbLua_set_global, 2);
   rb_define_method(cLuaState, "method_missing", rbLua_method_missing, -1);
