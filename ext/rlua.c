@@ -1,6 +1,7 @@
 #include <ruby.h> 
 #include <lua5.1/lua.h>
 #include <lua5.1/lauxlib.h>
+#include <lua5.1/lualib.h>
 #include <ctype.h>
 
 VALUE mLua, cLuaState, cLuaMultret, cLuaFunction, cLuaTable;
@@ -829,6 +830,41 @@ static VALUE rbLua_bootstrap(VALUE self)
   return Qtrue;
 }
 
+static void rlua_openlib(lua_State* state, lua_CFunction func)
+{
+  lua_pushcfunction(state, func);
+  lua_call(state, 0, 0);
+}
+
+static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+  
+  if(rb_ary_includes(args, ID2SYM(rb_intern("all")))) {
+    luaL_openlibs(state);
+  } else {
+    if(rb_ary_includes(args, ID2SYM(rb_intern("base"))))
+      rlua_openlib(state, luaopen_base);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_TABLIBNAME))))
+      rlua_openlib(state, luaopen_table);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_MATHLIBNAME))))
+      rlua_openlib(state, luaopen_math);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_STRLIBNAME))))
+      rlua_openlib(state, luaopen_string);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_DBLIBNAME))))
+      rlua_openlib(state, luaopen_debug);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_IOLIBNAME))))
+      rlua_openlib(state, luaopen_io);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_OSLIBNAME))))
+      rlua_openlib(state, luaopen_os);
+    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_LOADLIBNAME))))
+      rlua_openlib(state, luaopen_package);
+  }
+  
+  return Qtrue;
+}
+
 void Init_rlua()
 {
   mLua = rb_define_module("Lua");
@@ -837,6 +873,7 @@ void Init_rlua()
   rb_define_method(cLuaState, "initialize", rbLua_initialize, 0);
   rb_define_method(cLuaState, "__eval", rbLua_eval, 1);
   rb_define_method(cLuaState, "__bootstrap", rbLua_bootstrap, 0);
+  rb_define_method(cLuaState, "__load_stdlib", rbLua_load_stdlib, -2);
   rb_define_method(cLuaState, "__env", rbLua_get_env, 0);
   rb_define_method(cLuaState, "__env=", rbLua_set_env, 1);
   rb_define_method(cLuaState, "__get_metatable", rbLua_get_metatable, 1);
