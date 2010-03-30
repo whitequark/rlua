@@ -144,6 +144,10 @@ static void rlua_push_var(lua_State *state, VALUE value)
         lua_getfield(state, LUA_REGISTRYINDEX, "rlua");              // stack: |refs|...
         lua_rawgeti(state, -1, FIX2INT(rb_iv_get(value, "@ref")));   //        |objt|refs|...
         lua_remove(state, -2);                                       //        |objt|...
+      } else if(rb_obj_class(value) == cLuaState) {
+        lua_State* state;
+        Data_Get_Struct(rb_iv_get(value, "@state"), lua_State, state);
+        lua_pushthread(state);
       } else if(rb_respond_to(value, rb_intern("call"))) {
         VALUE rbLuaState;
         lua_getfield(state, LUA_REGISTRYINDEX, "rlua_state");
@@ -335,20 +339,6 @@ static VALUE rbLuaTable_rawset(VALUE self, VALUE index, VALUE value)
   return value;
 }
 
-static VALUE rbLuaTable_rawequal(VALUE self, VALUE table)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  int equal;
-  rlua_push_var(state, self);           // stack: |this|...
-  rlua_push_var(state, table);          //        |tble|this|...
-  equal = lua_rawequal(state, -1, -2);  //        |tble|this|...
-  lua_pop(state, 2);                    //        ...
-
-  return equal ? Qtrue : Qfalse;
-}
-
 static VALUE rbLuaTable_get_metatable(VALUE self)
 {
   lua_State* state;
@@ -519,37 +509,6 @@ static VALUE rbLuaFunction_call(VALUE self, VALUE args)
   return retval;
 }
 
-static VALUE rbLuaFunction_get_env(VALUE self)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  VALUE env;
-
-  rlua_push_var(state, self);                      // stack: |this|...
-  lua_getfenv(state, -1);                          //        |envi|this|...
-  env = rlua_get_var(state);                       //        |envi|this|...
-  lua_pop(state, 2);                               //        ...
-
-  return env;
-}
-
-static VALUE rbLuaFunction_set_env(VALUE self, VALUE env)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  if(rb_obj_class(env) != cLuaTable)
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table)", rb_obj_classname(env));
-
-  rlua_push_var(state, self);                      // stack: |this|...
-  rlua_push_var(state, env);                       //        |envi|this|...
-  lua_setfenv(state, -2);                          //        |this|...
-  lua_pop(state, 2);                               //        ...
-
-  return env;
-}
-
 static VALUE rbLua_initialize(VALUE self)
 {
   lua_State* state = luaL_newstate();
@@ -578,38 +537,64 @@ static VALUE rbLua_eval(VALUE self, VALUE code)
   return rlua_pcall(state, 0);
 }
 
-static VALUE rbLua_globals(VALUE self)
+static VALUE rbLua_get_env(VALUE self)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
   
   VALUE ref;
-  lua_pushvalue(state, LUA_GLOBALSINDEX);
-  ref = rlua_makeref(state);
-  lua_pop(state, 1);
+  rlua_push_var(state, self);                   // stack: |this|...
+  lua_getfenv(state, -1);                       //        |envi|this|...
+  ref = rlua_makeref(state);                    //        |envi|this|...
+  lua_pop(state, 2);                            //        ...
 
   return rb_funcall(cLuaTable, rb_intern("new"), 2, self, ref);
 }
 
-static VALUE rbLua_getglobal(VALUE self, VALUE index)
+static VALUE rbLua_set_env(VALUE self, VALUE env)
 {
-  VALUE globals = rbLua_globals(self);
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+  
+  if(rb_obj_class(env) != cLuaTable)
+    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table)", rb_obj_classname(env));
+
+  rlua_push_var(state, self);                      // stack: |this|...
+  rlua_push_var(state, env);                       //        |envi|this|...
+  lua_setfenv(state, -2);                          //        |this|...
+  lua_pop(state, 2);                               //        ...
+  
+  return env;
+}
+
+static VALUE rbLua_get_global(VALUE self, VALUE index)
+{
+  VALUE globals = rbLua_get_env(self);
   return rbLuaTable_get(globals, index);
 }
 
-static VALUE rbLua_setglobal(VALUE self, VALUE index, VALUE value)
+static VALUE rbLua_set_global(VALUE self, VALUE index, VALUE value)
 {
-  return rbLuaTable_set(rbLua_globals(self), index, value);
+  return rbLuaTable_set(rbLua_get_env(self), index, value);
+}
+
+static VALUE rbLua_rawequal(VALUE self, VALUE other)
+{
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  int equal;
+  rlua_push_var(state, self);           // stack: |this|...
+  rlua_push_var(state, other);          //        |othr|this|...
+  equal = lua_rawequal(state, -1, -2);  //        |othr|this|...
+  lua_pop(state, 2);                    //        ...
+
+  return equal ? Qtrue : Qfalse;
 }
 
 static VALUE rbLua_method_missing(int argc, VALUE* argv, VALUE self)
 {
-  return rbLuaTable_method_missing(argc, argv, rbLua_globals(self));
-}
-
-static VALUE rbLua_new_table(VALUE self)
-{
-  return rb_funcall(cLuaTable, rb_intern("new"), 1, self);
+  return rbLuaTable_method_missing(argc, argv, rbLua_get_env(self));
 }
 
 static VALUE rbLuaMultret_initialize(VALUE self, VALUE args)
@@ -840,13 +825,13 @@ void Init_rlua()
   
   cLuaState = rb_define_class_under(mLua, "State", rb_cObject);
   rb_define_method(cLuaState, "initialize", rbLua_initialize, 0);
-  rb_define_method(cLuaState, "eval", rbLua_eval, 1);
-  rb_define_method(cLuaState, "__globals", rbLua_globals, 0);
-  rb_define_method(cLuaState, "[]", rbLua_getglobal, 1);
-  rb_define_method(cLuaState, "[]=", rbLua_setglobal, 2);
+  rb_define_method(cLuaState, "__eval", rbLua_eval, 1);
+  rb_define_method(cLuaState, "__bootstrap", rbLua_bootstrap, 0);
+  rb_define_method(cLuaState, "__env", rbLua_get_env, 0);
+  rb_define_method(cLuaState, "__env=", rbLua_set_env, 1);
+  rb_define_method(cLuaState, "[]", rbLua_get_global, 1);
+  rb_define_method(cLuaState, "[]=", rbLua_set_global, 2);
   rb_define_method(cLuaState, "method_missing", rbLua_method_missing, -1);
-  rb_define_method(cLuaState, "new_table", rbLua_new_table, 0);
-  rb_define_method(cLuaState, "bootstrap", rbLua_bootstrap, 0);
   
   cLuaMultret = rb_define_class_under(mLua, "Multret", rb_cObject);
   rb_define_method(cLuaMultret, "initialize", rbLuaMultret_initialize, 1);
@@ -855,8 +840,8 @@ void Init_rlua()
   cLuaFunction = rb_define_class_under(mLua, "Function", rb_cObject);
   rb_define_method(cLuaFunction, "initialize", rbLuaFunction_initialize, -1);
   rb_define_method(cLuaFunction, "call", rbLuaFunction_call, -2);
-  rb_define_method(cLuaFunction, "env", rbLuaFunction_get_env, 0);
-  rb_define_method(cLuaFunction, "env=", rbLuaFunction_set_env, 1);
+  rb_define_method(cLuaFunction, "__env", rbLua_get_env, 0);
+  rb_define_method(cLuaFunction, "__env=", rbLua_set_env, 1);
 
   cLuaTable = rb_define_class_under(mLua, "Table", rb_cObject);
   rb_define_singleton_method(cLuaTable, "next", rbLuaTable_next, 2);
@@ -866,7 +851,7 @@ void Init_rlua()
   rb_define_method(cLuaTable, "__length", rbLuaTable_length, 0);
   rb_define_method(cLuaTable, "__get", rbLuaTable_rawget, 1);
   rb_define_method(cLuaTable, "__set", rbLuaTable_rawset, 2);
-  rb_define_method(cLuaTable, "__equal", rbLuaTable_rawequal, 1);
+  rb_define_method(cLuaTable, "__equal", rbLua_rawequal, 1);
   rb_define_method(cLuaTable, "[]", rbLuaTable_get, 1);
   rb_define_method(cLuaTable, "[]=", rbLuaTable_set, 2);
   rb_define_method(cLuaTable, "==", rbLuaTable_equal, 1);
