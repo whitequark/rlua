@@ -1,0 +1,85 @@
+= General description 
+RLua is Ruby to Lua bindings library that features almost full coverage of Lua
+C API, seamless translation of Lua and Ruby objects into each other, calling Lua
+functions from Ruby and vice versa.
+
+RLua currently uses Lua 5.1, and is Ruby 1.8, 1.9 and 1.9.1 compatible.
+
+= Installation
+RLua is distributed as gem package through rubyforge, so the procedure is
+quite usual. It uses native Lua C API, so it will need to compile an extension
+during installation.
+
+On Linux, you will need to install Lua development files first.
+They are packaged as +liblua5.1-dev+ in Debian and it's derivatives (like Ubuntu).
+
+On Windows, you will need MSVC to compile everything. Through I did not tested
+this (and so cannot provide a detailed description), it should work fine.
+
+= Example code
+
+  require 'rlua'
+  
+  state = Lua::State.new   # create Lua interpreter
+  state.__load_stdlib :all # load some standard libraries in it
+  state.__eval "print('hello, world')" # launch some Lua code
+
+  state.value = 10            # set a variable in Ruby
+  state.__eval "print(value)" # show it's value from Lua
+
+  state.__eval "value = 15"   # set a variable in Lua
+  p state.value               # show it's value from Ruby
+
+  # create a function in Lua
+  state.__eval "function lua_func() print('hello from Lua') end"
+  # launch it from Ruby
+  state.lua_func
+
+  # create a table in Ruby and method in it
+  state.ruby = {
+    'meaning_of_life' => 42,
+    'zaphod' => lambda { |this|
+      p "Meaning of life: #{this.meaning_of_life}"
+    }
+  }
+  # launch that from Lua as instance method
+  state.__eval "ruby:zaphod()"
+
+= Type conversion
+Lua and Ruby types are seamlessly translated into each other when calling functions,
+changing tables and so on. The translation is conservative: you can convert a
+value from Ruby to Lua, then backwards and will always receive an object that
+will behave absolutely the same.
+
+Here is a table of type mapping:
+<b>Ruby type</b>:: <b>Lua type</b>
+nil:: nil
+Boolean (TrueClass or FalseClass):: true or false
+Fixnum, Bignum or Float:: number
+Proc:: function
+String:: string
+Hash:: table
+Array:: table (with numeric keys)
+
+Hashes and Arrays are translated recursively: all keys and values are translated too.
+Getting any Lua function to Ruby code (even the Ruby proc that was translated 
+before) results in Lua::Function created, and tables behave the same creating
+Lua::Table object.
+
+Proc objects are duck-typed: anything that responds to +call+ method is considered
+Proc.
+
+Translation of any object not in the list is impossible and will generate an
+TypeError exception.
+
+= Notes
+Most functions are named much like their C API counterparts.
+
+'Ruby-object-like' table indexing convention is described in Lua::Table,
+and function calling is described in Lua::Function.
+
+= Author
+RLua is currently developed solely by Peter Zotov <whitequark@whitequark.ru>.
+
+= License
+
