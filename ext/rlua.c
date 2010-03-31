@@ -440,6 +440,9 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
     lua_pushcclosure(state, call_ruby_proc, 1);
     ref = rlua_makeref(state);
     lua_pop(state, 1);
+    
+    // don't allow GC to collect proc
+    rb_iv_set(self, "@proc", proc);
   }
   
   rlua_add_ref_finalizer(rbState, ref, self);
