@@ -411,6 +411,27 @@ static VALUE rbLuaTable_length(VALUE self)
 
 static VALUE rbLuaFunction_call(VALUE self, VALUE args);
 
+/*
+ * call-seq: method_missing(method, *args) -> *values
+ *
+ * This method allows accessing Lua tables much as if they were Ruby
+ * objects.
+ *
+ * <b>Setting values</b> can be done with a standard <i>setter method</i>:
+ * <tt>table.key = value</tt> is equivalent to <tt>table["key"] = value</tt>.
+ *
+ * <b>Getting values</b> is as easy as setting: if the value is not a function,
+ * <tt>table.key</tt> is equivalent to <tt>table["key"]</tt>.
+ *
+ * If some table has a function as value, you can <b>invoke methods</b> on it.
+ * <tt>table.method(arg1, ..., argN)</tt> is equivalent to
+ * <tt>table["method"].call(arg1, ..., argN)</tt>, and
+ * <tt>table.method!(arg1, ..., argN)</tt> is equivalent to
+ * <tt>table["method"].call(table, arg1, ..., argN)</tt>.
+ * To get a reference to function you should use the <tt>table["method"]</tt>
+ * notation.
+ *
+ */
 static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)
 {
   VALUE id, args;
@@ -1175,6 +1196,8 @@ void Init_rlua()
    * A Ruby Lua::Table object represents a *reference* to a Lua table.
    * As it is a reference, any changes made to table in Lua are visible in
    * Ruby and vice versa.
+   *
+   * See also #method_missing function for a convenient way to access tables.
    */
   cLuaTable = rb_define_class_under(mLua, "Table", rb_cObject);
   rb_define_singleton_method(cLuaTable, "next", rbLuaTable_next, 2);
