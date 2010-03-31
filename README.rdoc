@@ -6,7 +6,7 @@ functions from Ruby and vice versa.
 RLua currently uses Lua 5.1, and is Ruby 1.8, 1.9 and 1.9.1 compatible.
 
 = Installation
-RLua is distributed as gem package through rubyforge, so the procedure is
+RLua is distributed as gem package through rubygems.org, so the procedure is
 quite usual. It uses native Lua C API, so it will need to compile an extension
 during installation.
 
