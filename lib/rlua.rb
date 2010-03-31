@@ -54,7 +54,7 @@ module Lua
           end
           v << s
         }
-        "L{ #{v.join ', '} }"
+        "L{#{v.join ', '}}"
       end
     end
   end
