@@ -162,15 +162,39 @@ static void rlua_push_var(lua_State *state, VALUE value)
   }
 }
 
-static void rlua_load_string(lua_State* state, VALUE code)
+static const char* rlua_reader(lua_State* state, void *data, size_t *size)
+{
+  VALUE code = (VALUE) data;
+
+  if(rb_iv_get(code, "@read") != Qnil) {
+    *size = 0;
+    return NULL;
+  } else {
+    *size = RSTRING_LEN(code);
+    rb_iv_set(code, "@read", Qtrue);
+    return RSTRING_PTR(code);
+  }
+}
+
+static void rlua_load_string(lua_State* state, VALUE code, VALUE chunkname)
 {
   Check_Type(code, T_STRING);
+  Check_Type(chunkname, T_STRING);
+
+  // do not interfere with users' string
+  VALUE interm_code = rb_str_new3(code);
   
-  int retval = luaL_loadstring(state, RSTRING_PTR(code));
-  if(retval == LUA_ERRMEM)
-    rb_raise(rb_eNoMemError, "cannot load Lua code");
-  else if(retval == LUA_ERRSYNTAX)
-    rb_raise(rb_eSyntaxError, "%s", lua_tostring(state, -1));
+  int retval = lua_load(state, rlua_reader, (void*) interm_code, RSTRING_PTR(chunkname));
+  if(retval != 0) {
+    size_t errlen;
+    const char* errstr = lua_tolstring(state, -1, &errlen);
+    VALUE error = rb_str_new(errstr, errlen);
+    lua_pop(state, 1);
+    if(retval == LUA_ERRMEM)
+      rb_exc_raise(rb_exc_new3(rb_eNoMemError, error));
+    else if(retval == LUA_ERRSYNTAX)
+      rb_exc_raise(rb_exc_new3(rb_eSyntaxError, error));
+  }
 }
 
 static VALUE rlua_pcall(lua_State* state, int argc)
@@ -584,12 +608,31 @@ static VALUE rbLua_initialize(VALUE self)
   return self;
 }
 
-static VALUE rbLua_eval(VALUE self, VALUE code)
+/*
+ * call-seq: __eval(code[, chunkname='=<eval>']) -> *values
+ *
+ * Runs +code+ in Lua interpreter. Optional argument +chunkname+
+ * specifies a string that will be used in error messages and other
+ * debug information as a file name.
+ *
+ * Start +chunkname+ with a @ to make Lua think the following is filename
+ * (e.g. @test.lua); start it with a = to indicate a non-filename stream
+ * (e.g. =stdin). Anything other is interpreted as a plaintext Lua code and
+ * a few starting characters will be shown.
+ */
+static VALUE rbLua_eval(int argc, VALUE* argv, VALUE self)
 {
+  VALUE code, chunkname;
+  rb_scan_args(argc, argv, "11", &code, &chunkname);
+
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
   
-  rlua_load_string(state, code);
+  if(chunkname == Qnil)
+    chunkname = rb_str_new2("=<eval>");
+
+  rlua_load_string(state, code, chunkname);
+  
   return rlua_pcall(state, 0);
 }
 
@@ -1086,7 +1129,7 @@ void Init_rlua()
   
   cLuaState = rb_define_class_under(mLua, "State", rb_cObject);
   rb_define_method(cLuaState, "initialize", rbLua_initialize, 0);
-  rb_define_method(cLuaState, "__eval", rbLua_eval, 1);
+  rb_define_method(cLuaState, "__eval", rbLua_eval, -1);
   rb_define_method(cLuaState, "__bootstrap", rbLua_bootstrap, 0);
   rb_define_method(cLuaState, "__load_stdlib", rbLua_load_stdlib, -2);
   rb_define_method(cLuaState, "__env", rbLua_get_env, 0);
