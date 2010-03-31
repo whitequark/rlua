@@ -181,13 +181,15 @@ static VALUE rlua_pcall(lua_State* state, int argc)
   
   int retval = lua_pcall(state, argc, LUA_MULTRET, 0);
   if(retval != 0) {
-    const char* error = lua_tostring(state, -1);
+    size_t errlen;
+    const char* errstr = lua_tolstring(state, -1, &errlen);
+    VALUE error = rb_str_new(errstr, errlen);
     lua_pop(state, 1);
     
     if(retval == LUA_ERRRUN)
-      rb_raise(rb_eRuntimeError, "%s", error);
-    else if(retval == LUA_ERRMEM)
-      rb_raise(rb_eNoMemError, "%s", error);
+      rb_exc_raise(rb_exc_new3(rb_eRuntimeError, error));
+    else if(retval == LUA_ERRSYNTAX)
+      rb_exc_raise(rb_exc_new3(rb_eSyntaxError, error));
     else
       rb_fatal("unknown lua_pcall return value");
   } else {
