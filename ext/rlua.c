@@ -609,7 +609,7 @@ static VALUE rbLua_initialize(VALUE self)
 }
 
 /*
- * call-seq: __eval(code[, chunkname='=<eval>']) -> *values
+ * call-seq: __eval(code[, chunkname='=&lt;eval&gt;']) -> *values
  *
  * Runs +code+ in Lua interpreter. Optional argument +chunkname+
  * specifies a string that will be used in error messages and other
