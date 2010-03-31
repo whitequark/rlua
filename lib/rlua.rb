@@ -2,6 +2,7 @@ require 'rlua.so'
 
 module Lua
   class Table
+    # Traverses the table using Lua::Table.next function.
     def each(&block)
       key = nil
       loop {
@@ -11,13 +12,15 @@ module Lua
       }
       self
     end
-    
+
+    # Non-recursively converts table to hash.
     def to_hash
       hash = {}
       each { |k, v| hash[k] = v }
       hash
     end
-    
+
+    # Converts table to array. Only integer indexes are used.
     def to_ary
       ary = []
       1.upto(__length) { |i|
@@ -30,7 +33,10 @@ module Lua
       ary
     end
     alias :to_a :to_ary
-    
+
+    # Recursively pretty-prints the table properly handling reference loops.
+    #
+    # +trace+ argument is internal, do not use it.
     def inspect(trace=[])
       if to_hash.empty?
         "L{}"
