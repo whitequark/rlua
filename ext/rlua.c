@@ -426,14 +426,12 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
   
   VALUE proc = Qnil;
   
-  if(func == Qnil)
-    proc = rb_block_proc();
-  else if(TYPE(func) == T_FIXNUM)
+  if(TYPE(func) == T_FIXNUM)
     ref = func;
   else if(rb_respond_to(func, rb_intern("call")))
     proc = func;
   else
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected nil or Proc)", rb_obj_classname(func));
+    rb_raise(rb_eTypeError, "wrong argument type %s (expected Proc)", rb_obj_classname(func));
 
   if(ref == Qnil) {
     lua_pushlightuserdata(state, (void*) proc);
