@@ -1045,7 +1045,7 @@ static const
   };
 
 /*
- * call-seq: __bootstrap -> true
+ * call-seq: __bootstrap() -> true
  *
  * Deploys an absolute minimum of functions required to write minimally
  * useful Lua programs. This is really a subset of Lua _base_ library
