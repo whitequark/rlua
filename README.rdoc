@@ -1,4 +1,4 @@
-= General description 
+= Description
 RLua is Ruby to Lua bindings library that features almost full coverage of Lua
 C API, seamless translation of Lua and Ruby objects into each other, calling Lua
 functions from Ruby and vice versa.
@@ -11,7 +11,8 @@ quite usual. It uses native Lua C API, so it will need to compile an extension
 during installation.
 
 On Linux, you will need to install Lua development files first.
-They are packaged as +liblua5.1-dev+ in Debian and it's derivatives (like Ubuntu).
+They are packaged as <tt>liblua5.1-dev</tt> in Debian and it's derivatives
+(like Ubuntu).
 
 On Windows, you will need MSVC to compile everything. Through I did not tested
 this (and so cannot provide a detailed description), it should work fine.
@@ -79,7 +80,18 @@ Most functions are named much like their C API counterparts.
 and function calling is described in Lua::Function.
 
 = Author
-RLua is currently developed solely by Peter Zotov <whitequark@whitequark.ru>.
+RLua is currently developed solely by Peter Zotov &lt;whitequark@whitequark.ru&gt;.
 
 = License
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.

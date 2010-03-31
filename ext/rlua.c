@@ -1,3 +1,20 @@
+/*
+ * This file is part of RLua.
+ *
+ * RLua is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * RLua is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with RLua.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <ruby.h> 
 #include <lua5.1/lua.h>
 #include <lua5.1/lauxlib.h>
@@ -271,7 +288,7 @@ static VALUE rbLuaTable_initialize(int argc, VALUE* argv, VALUE self)
 }
 
 /*
- * call-seq: next(table, key) -> [ key, value ] or nil
+ * call-seq: Lua::Table.next(table, key) -> [ key, value ] or nil
  *
  * Iterates over a Lua table referenced by +table+.
  * This function is analogue for Lua next function, but can be used
@@ -308,7 +325,7 @@ static VALUE rbLuaTable_next(VALUE self, VALUE table, VALUE index)
 }
 
 /*
- * call-seq: [](key) -> value
+ * call-seq: table[key] -> value
  *
  * Returns value associated with +key+ in Lua table. May invoke Lua
  * +__index+ metamethod.
@@ -329,7 +346,7 @@ static VALUE rbLuaTable_get(VALUE self, VALUE index)
 }
 
 /*
- * call-seq: []=(key, value) -> value
+ * call-seq: table[key] = value -> value
  *
  * Sets value associated with +key+ to +value+ in Lua table. May invoke Lua
  * +__newindex+ metamethod.
@@ -349,7 +366,7 @@ static VALUE rbLuaTable_set(VALUE self, VALUE index, VALUE value)
 }
 
 /*
- * call-seq: __get(key) -> value
+ * call-seq: table.__get(key) -> value
  *
  * Returns value associated with +key+ in Lua table without invoking
  * any Lua metamethod (similar to +rawget+ Lua function).
@@ -370,7 +387,7 @@ static VALUE rbLuaTable_rawget(VALUE self, VALUE index)
 }
 
 /*
- * call-seq: __set(key, value) -> value
+ * call-seq: table.__set(key, value) -> value
  *
  * Sets value associated with +key+ to +value+ in Lua table without invoking
  * any Lua metamethod (similar to +rawset+ Lua function).
@@ -390,7 +407,7 @@ static VALUE rbLuaTable_rawset(VALUE self, VALUE index, VALUE value)
 }
 
 /*
- * call-seq: __length -> int
+ * call-seq: table.__length -> int
  *
  * Returns table length as with Lua length # operator. Will not call
  * any metamethod because __len metamethod has no effect when
@@ -412,7 +429,7 @@ static VALUE rbLuaTable_length(VALUE self)
 static VALUE rbLuaFunction_call(VALUE self, VALUE args);
 
 /*
- * call-seq: method_missing(method, *args) -> *values
+ * call-seq: table.method_missing(method, *args) -> *values
  *
  * This method allows accessing Lua tables much as if they were Ruby
  * objects.
@@ -500,7 +517,7 @@ static int call_ruby_proc(lua_State* state)
 }
 
 /*
- * call-seq: new(state, proc) -> Lua::Function
+ * call-seq: Lua::Function.new(state, proc)
  *
  * Converts a Ruby closure +proc+ to a Lua function in Lua::State represented
  * by +state+. Note that you generally do not need to call this function
@@ -548,7 +565,7 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
 }
 
 /*
- * call-seq: call(*args) -> *values
+ * call-seq: func.call(*args) -> *values
  *
  * Invokes a Lua function in protected environment (like a Lua +xpcall+).
  *
@@ -608,6 +625,8 @@ static VALUE rbLuaFunction_call(VALUE self, VALUE args)
 }
 
 /*
+ * call-seq: Lua::State.new
+ *
  * Creates a new Lua state.
  */
 static VALUE rbLua_initialize(VALUE self)
@@ -630,7 +649,7 @@ static VALUE rbLua_initialize(VALUE self)
 }
 
 /*
- * call-seq: __eval(code[, chunkname='=&lt;eval&gt;']) -> *values
+ * call-seq: state.__eval(code[, chunkname='=&lt;eval&gt;']) -> *values
  *
  * Runs +code+ in Lua interpreter. Optional argument +chunkname+
  * specifies a string that will be used in error messages and other
@@ -658,7 +677,7 @@ static VALUE rbLua_eval(int argc, VALUE* argv, VALUE self)
 }
 
 /*
- * call-seq: __env() -> Lua::Table
+ * call-seq: object.__env() -> Lua::Table
  *
  * Returns environment table of Lua::State or Lua::Function.
  */
@@ -677,7 +696,7 @@ static VALUE rbLua_get_env(VALUE self)
 }
 
 /*
- * call-seq: __env=(table) -> table
+ * call-seq: object.__env=(table) -> table
  *
  * Sets environment table for Lua::State or Lua::Function. +table+ may be
  * a Lua::Table or a Hash.
@@ -699,7 +718,7 @@ static VALUE rbLua_set_env(VALUE self, VALUE env)
 }
 
 /*
- * call-seq: __get_metatable(object) -> Lua::Table or nil
+ * call-seq: state.__get_metatable(object) -> Lua::Table or nil
  *
  * Returns metatable of any valid Lua object or nil if it is not present.
  * If you want to get metatables of non-table objects (e.g. numbers)
@@ -724,7 +743,7 @@ static VALUE rbLua_get_metatable(VALUE self, VALUE object)
 }
 
 /*
- * call-seq: __set_metatable=(object, metatable) -> metatable
+ * call-seq: state.__set_metatable=(object, metatable) -> metatable
  *
  * Sets metatable for any valid Lua object. +metatable+ can be Lua::Table or
  * Hash. If you want to set metatables for non-table objects (e.g. numbers)
@@ -752,7 +771,7 @@ static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)
 }
 
 /*
- * call-seq: __metatable() -> Lua::Table or nil
+ * call-seq: table.__metatable() -> Lua::Table or nil
  *
  * Returns metatable of this table or nil if it is not present.
  */
@@ -762,7 +781,7 @@ static VALUE rbLuaTable_get_metatable(VALUE self)
 }
 
 /*
- * call-seq: __metatable=(metatable) -> metatable
+ * call-seq: table.__metatable=(metatable) -> metatable
  *
  * Sets metatable for this table. +metatable+ can be Lua::Table or Hash.
  */
@@ -772,7 +791,7 @@ static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)
 }
 
 /*
- * call-seq: [](key) -> value
+ * call-seq: state[key] -> value
  *
  * Returns value of a global variable. Equivalent to __env[key].
  */
@@ -783,7 +802,7 @@ static VALUE rbLua_get_global(VALUE self, VALUE index)
 }
 
 /*
- * call-seq: []=(key, value) -> value
+ * call-seq: state[key] = value -> value
  *
  * Sets value for a global variable. Equivalent to __env[key] = value.
  */
@@ -793,9 +812,9 @@ static VALUE rbLua_set_global(VALUE self, VALUE index, VALUE value)
 }
 
 /*
- * call-seq: ==(other) -> true or false
+ * call-seq: this == other -> true or false
  *
- * Compares +self+ with +other+. May call +__eq+ metamethod.
+ * Compares +this+ with +other+. May call +__eq+ metamethod.
  */
 static VALUE rbLua_equal(VALUE self, VALUE other)
 {
@@ -812,9 +831,9 @@ static VALUE rbLua_equal(VALUE self, VALUE other)
 }
 
 /*
- * call-seq: __equal(other) -> true or false
+ * call-seq: this.__equal(other) -> true or false
  *
- * Compares +self+ with +other+ without calling any metamethods.
+ * Compares +this+ with +other+ without calling any metamethods.
  */
 static VALUE rbLua_rawequal(VALUE self, VALUE other)
 {
@@ -831,7 +850,7 @@ static VALUE rbLua_rawequal(VALUE self, VALUE other)
 }
 
 /*
- * call-seq: method_missing(method, *args) -> *values
+ * call-seq: state.method_missing(method, *args) -> *values
  *
  * See Lua::Table#method_missing. Equivalent to __env.method_missing(method, *args).
  */
@@ -841,7 +860,7 @@ static VALUE rbLua_method_missing(int argc, VALUE* argv, VALUE self)
 }
 
 /*
- * call-seq: new(*values)
+ * call-seq: Lua::Multret.new(*values)
  *
  * Creates a new Multret object with +values+ inside. Example:
  *
@@ -854,7 +873,7 @@ static VALUE rbLuaMultret_initialize(VALUE self, VALUE args)
 }
 
 /*
- * call-seq: multret(*values)
+ * call-seq: Lua.multret(*values)
  *
  * Shorthand for Lua::Multret.new.
  */
@@ -1045,7 +1064,7 @@ static const
   };
 
 /*
- * call-seq: __bootstrap() -> true
+ * call-seq: state.__bootstrap() -> true
  *
  * Deploys an absolute minimum of functions required to write minimally
  * useful Lua programs. This is really a subset of Lua _base_ library
@@ -1088,7 +1107,7 @@ static void rlua_openlib(lua_State* state, lua_CFunction func)
 }
 
 /*
- * call-seq: __load_stdlib(*libs) -> true
+ * call-seq: state.__load_stdlib(*libs) -> true
  *
  * Loads Lua standard libraries. There are two ways of calling this function:
  *
@@ -1108,9 +1127,10 @@ static void rlua_openlib(lua_State* state, lua_CFunction func)
  *   state = Lua::State.new
  *   state.__load_stdlib :math, :string, :table
  *
- * Exact list of libraries recognized: +:base+, +:table+, +:math+, +:string+,
- * +:debug+, +:io+, +:os+, +:package+. <b>Anything not included in this list
- * is silently ignored.</b>
+ * Exact list of libraries recognized: <tt>:base</tt>, <tt>:table</tt>,
+ * <tt>:math</tt>, <tt>:string</tt>, <tt>:debug</tt>, <tt>:io</tt>,
+ * <tt>:os</tt>, <tt>:package</tt>.
+ * <b>Anything not included in this list will be silently ignored.</b>
  */
 static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
 {
@@ -1144,10 +1164,14 @@ static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
 void Init_rlua()
 {
   /*
-   * Lua module.
+   * Main module that encapsulates all RLua classes and methods.
    */
   mLua = rb_define_module("Lua");
   
+  /*
+   * Lua::State represents Lua interpreter state which is one thread of
+   * execution.
+   */
   cLuaState = rb_define_class_under(mLua, "State", rb_cObject);
   rb_define_method(cLuaState, "initialize", rbLua_initialize, 0);
   rb_define_method(cLuaState, "__eval", rbLua_eval, -1);

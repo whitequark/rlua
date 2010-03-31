@@ -3,6 +3,7 @@ require 'rake/gempackagetask'
 require 'rake/rdoctask'
 
 RLUA_VERSION = "0.1rc1"
+RDOC_OPTIONS = ['-S', '-N', '--main=README.rdoc', '--title=RLua Documentation']
 
 spec = Gem::Specification.new do |s|
   s.name = "rlua"
@@ -14,17 +15,22 @@ spec = Gem::Specification.new do |s|
   s.description = <<-EOD
   Fully functional, almost complete Ruby to Lua binding library that
   features seamless translation of most Lua and Ruby objects and calling
-  of each language code from others.
+  code of each language from other one.
   EOD
   s.files = FileList["ext/*.c", "lib/*"].to_a
   s.extensions = 'ext/extconf.rb'
+  s.rubyforge_project = 'rlua'
+  s.homepage = 'http://rlua.rubyforge.org'
+  s.extra_rdoc_files = [ 'README.rdoc', 'LICENSE.rdoc', 'ext/rlua.c' ]
+  s.rdoc_options = RDOC_OPTIONS
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
+  pkg.need_tar_bz2 = true
 end
 
 Rake::RDocTask.new do |rd|
-  rd.rdoc_files.include("README.rdoc", "lib/*.rb", "ext/rlua.c")
-  rd.options << '--inline-source'
-  rd.main = 'README.rdoc'
+  rd.rdoc_files.include("*.rdoc", "lib/*.rb", "ext/rlua.c")
+  rd.rdoc_dir = 'doc'
+  rd.options += RDOC_OPTIONS
 end
