@@ -2,3 +2,5 @@ Makefile
 *.o
 *.so
 *.gem
+doc/
+html/
