@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
 
-RLUA_VERSION = "0.1rc1"
+RLUA_VERSION = "1.0rc1"
 RDOC_OPTIONS = ['-S', '-N', '--main=README.rdoc', '--title=RLua Documentation']
 
 spec = Gem::Specification.new do |s|
