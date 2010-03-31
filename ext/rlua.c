@@ -448,6 +448,10 @@ static VALUE rbLuaFunction_call(VALUE self, VALUE args);
  * To get a reference to function you should use the <tt>table["method"]</tt>
  * notation.
  *
+ * If the value is not present in table (which is equivalent to +nil+ value
+ * in Lua) MethodNotFound exception will be raised; if you will attempt
+ * to call something which is not a function as a method, TypeError exception
+ * will be raised.
  */
 static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)
 {
