@@ -12,7 +12,7 @@ during installation.
 
 On Linux, you will need to install Lua development files first.
 They are packaged as <tt>liblua5.1-dev</tt> in Debian and it's derivatives
-(like Ubuntu).
+(like Ubuntu). After that you can simply run <tt>gem install rlua</tt>.
 
 On Windows, you will need MSVC to compile everything. Through I did not tested
 this (and so cannot provide a detailed description), it should work fine.
@@ -80,7 +80,9 @@ Most functions are named much like their C API counterparts.
 and function calling is described in Lua::Function.
 
 = Author
-RLua is currently developed solely by Peter Zotov &lt;whitequark@whitequark.ru&gt;.
+RLua is currently developed solely by Peter Zotov
+(whitequark@whitequark.ru[mailto:whitequark@whitequark.ru]).
+Feel free to email me if you encounter any bugs.
 
 = License
   This program is free software: you can redistribute it and/or modify
