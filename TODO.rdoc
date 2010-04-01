@@ -1,0 +1,7 @@
+= ToDo list
+
+* Add coroutine/multithreading support.
+  Pushing of Lua states is already done, only popping of (non-main) states
+  is required. Don't forget about GC!
+
+* Add debug library support.

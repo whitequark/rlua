@@ -4,6 +4,7 @@ require 'rake/rdoctask'
 
 RLUA_VERSION = "1.0rc1"
 RDOC_OPTIONS = ['-S', '-N', '--main=README.rdoc', '--title=RLua Documentation']
+RDOC_FILES = FileList['*.rdoc', 'lib/*', 'ext/rlua.c'].to_a
 
 spec = Gem::Specification.new do |s|
   s.name = "rlua"
@@ -21,7 +22,7 @@ spec = Gem::Specification.new do |s|
   s.extensions = 'ext/extconf.rb'
   s.rubyforge_project = 'rlua'
   s.homepage = 'http://rlua.rubyforge.org'
-  s.extra_rdoc_files = [ 'README.rdoc', 'LICENSE.rdoc', 'ext/rlua.c' ]
+  s.extra_rdoc_files = RDOC_FILES
   s.rdoc_options = RDOC_OPTIONS
 end
 
@@ -30,7 +31,7 @@ Rake::GemPackageTask.new(spec) do |pkg|
 end
 
 Rake::RDocTask.new do |rd|
-  rd.rdoc_files.include("*.rdoc", "lib/*.rb", "ext/rlua.c")
+  rd.rdoc_files = RDOC_FILES
   rd.rdoc_dir = 'doc'
   rd.options += RDOC_OPTIONS
 end
