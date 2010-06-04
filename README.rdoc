@@ -84,7 +84,7 @@ Everything not currently implemented is described in
 
 = Author
 RLua is currently developed solely by Peter Zotov
-(whitequark@whitequark.ru[mailto:whitequark@whitequark.ru]).
+(whitequark@whitequark.org[mailto:whitequark@whitequark.org]).
 Feel free to email me if you encounter any bugs.
 
 = License
