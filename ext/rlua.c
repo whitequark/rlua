@@ -490,7 +490,24 @@ static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)
   }
 }
 
-static int call_ruby_proc(lua_State* state)
+static VALUE rlua_call_ruby_proc(VALUE parg)
+{
+  VALUE pack[2] = (VALUE*) parg;
+  return rb_apply(pack[0], rb_intern("call"), pack[1]);
+}
+
+static VALUE rlua_rescue_ruby_proc(VALUE pstate, VALUE errinfo)
+{
+  lua_State* state = (lua_State*) pstate;
+  
+//  lua_pushuserdata(state, errinfo);
+  lua_pushliteral(state, "error in ruby proc");
+  lua_error(state);
+
+  return Qundef; // never returns
+}
+
+static int rlua_protect_ruby_proc(lua_State* state)
 {
   int i;
   int argc = lua_gettop(state);
@@ -503,8 +520,13 @@ static int call_ruby_proc(lua_State* state)
     rb_ary_unshift(args, rlua_get_var(state));
     lua_pop(state, 1);
   }
-  
-  VALUE retval = rb_apply(proc, rb_intern("call"), args);
+
+  VALUE pack[2];
+  pack[0] = proc;
+  pack[1] = args;
+
+  VALUE retval = rb_protect(rlua_call_ruby_proc, (VALUE) pack,
+                            rlua_rescue_ruby_proc, Qundef);
   
   if(rb_obj_class(retval) == cLuaMultret) {
     VALUE array = rb_iv_get(retval, "@args");
@@ -553,7 +575,7 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
 
   if(ref == Qnil) {
     lua_pushlightuserdata(state, (void*) proc);
-    lua_pushcclosure(state, call_ruby_proc, 1);
+    lua_pushcclosure(state, rlua_protect_ruby_proc, 1);
     ref = rlua_makeref(state);
     lua_pop(state, 1);
     
