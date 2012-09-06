@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
 
-RLUA_VERSION = "1.0"
+RLUA_VERSION = "1.1.rc.1"
 RDOC_OPTIONS = ['-S', '-N', '--main=README.rdoc', '--title=RLua Documentation']
 RDOC_FILES = FileList['*.rdoc', 'lib/*', 'ext/rlua.c'].to_a
 
