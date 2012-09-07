@@ -1,0 +1,420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>Lua::Table</title>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+    <link href='../../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>class</span>
+          Lua::Table
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a target="docwin" href="../../files/lib/rlua_rb.html">lib/rlua.rb</a>
+          </li>
+          <li class='other'>
+            <a target="docwin" href="../../files/ext/rlua_c.html">ext/rlua.c</a>
+          </li>
+          <li>
+            <a class='show' href='#' onclick='this.parentNode.parentNode.className += " expanded"; this.parentNode.removeChild(this); return false'>show all</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong><a target="docwin" href="../Lua.html">Lua</a></strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <p><a href="State.html">Lua::State</a> represents <a
+            href="../Lua.html">Lua</a> interpreter state which is one thread of
+            execution.</p>
+          </div>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>Public Class</h3>
+            <ol>
+              <li><a target="docwin" href="#method-c-next">next</a></li>
+            </ol>
+            <h3>Public Instance</h3>
+            <ol>
+              <li><a target="docwin" href="#method-i-3D-3D">==</a></li>
+              <li><a target="docwin" href="#method-i-5B-5D">[]</a></li>
+              <li><a target="docwin" href="#method-i-5B-5D-3D">[]=</a></li>
+              <li><a target="docwin" href="#method-i-__equal">__equal</a></li>
+              <li><a target="docwin" href="#method-i-__get">__get</a></li>
+              <li><a target="docwin" href="#method-i-__length">__length</a></li>
+              <li><a target="docwin" href="#method-i-__metatable">__metatable</a></li>
+              <li><a target="docwin" href="#method-i-__metatable-3D">__metatable=</a></li>
+              <li><a target="docwin" href="#method-i-__set">__set</a></li>
+              <li><a target="docwin" href="#method-i-each">each</a></li>
+              <li><a target="docwin" href="#method-i-inspect">inspect</a></li>
+              <li><a target="docwin" href="#method-i-method_missing">method_missing</a></li>
+              <li><a target="docwin" href="#method-i-to_ary">to_ary</a></li>
+              <li><a target="docwin" href="#method-i-to_hash">to_hash</a></li>
+            </ol>
+          </div>
+          <div id='context'>
+          </div>
+          <div id='section'>
+            <div id='aliases-list'>
+              <h2>Public Instance Aliases</h2>
+              <div class='name-list'>
+                <table summary='Public Instance Aliases'>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>to_a</td>
+                    <td>-&gt;</td>
+                    <td class='context-item-value'><a target="docwin" href="#method-i-to_ary">to_ary</a></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div id='methods'>
+              <h2>Public Class methods</h2>
+              <div class='method public-class' id='method-method-c-next'>
+                <a name='method-c-next'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>Lua::Table.next(table, key) -> [ key, value ] or nil</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Iterates over a <a href="../Lua.html">Lua</a> table referenced by
+                  <code>table</code>. This function is analogue for <a
+                  href="../Lua.html">Lua</a> next function, but can be used even if <a
+                  href="../Lua.html">Lua</a> one is not defined.</p>
+                  
+                  <p>You can use this method yourself, through it is easier to invoke <a
+                  href="Table.html#method-i-to_a">#to_a</a> or to_hash.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-next-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-next-source'>static VALUE rbLuaTable_next(VALUE self, VALUE table, VALUE index)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(table, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE retval;&#x000A;  &#x000A;  rlua_push_var(state, table);                     // stack: |this|...&#x000A;  rlua_push_var(state, index);                     //        |indx|this|...&#x000A;  if(lua_next(state, -2) != 0) {                   //        |valu|key |this|...&#x000A;    VALUE value, key;&#x000A;    value = rlua_get_var(state);                   //        |valu|key |this|...&#x000A;    lua_pop(state, 1);                             //        |key |this|...&#x000A;    key = rlua_get_var(state);                     //        |key |this|...&#x000A;    lua_pop(state, 2);                             //        ...&#x000A;    &#x000A;    retval = rb_ary_new();&#x000A;    rb_ary_push(retval, key);&#x000A;    rb_ary_push(retval, value);&#x000A;  } else {                                         //        |this|...&#x000A;    retval = Qnil;&#x000A;    lua_pop(state, 1);                             //        ...&#x000A;  }&#x000A;  &#x000A;  return retval;&#x000A;}</pre>
+                </div>
+              </div>
+              <h2>Public Instance methods</h2>
+              <div class='method public-instance' id='method-method-i-3D-3D'>
+                <a name='method-i-3D-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>this == other -> true or false</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Compares <code>this</code> with <code>other</code>. May call
+                  <code>__eq</code> metamethod.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-3D-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-3D-3D-source'>static VALUE rbLua_equal(VALUE self, VALUE other)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  int equal;&#x000A;  rlua_push_var(state, self);           // stack: |this|...&#x000A;  rlua_push_var(state, other);          //        |othr|this|...&#x000A;  equal = lua_equal(state, -1, -2);     //        |othr|this|...&#x000A;  lua_pop(state, 2);                    //        ...&#x000A;&#x000A;  return equal ? Qtrue : Qfalse;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-5B-5D'>
+                <a name='method-i-5B-5D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table[key] -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns value associated with <code>key</code> in <a
+                  href="../Lua.html">Lua</a> table. May invoke <a href="../Lua.html">Lua</a>
+                  <code>__index</code> metamethod.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-5B-5D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-5B-5D-source'>static VALUE rbLuaTable_get(VALUE self, VALUE index)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE value;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, index);                     //        |indx|this|...&#x000A;  lua_gettable(state, -2);                         //        |valu|this|...&#x000A;  value = rlua_get_var(state);                     //        |valu|this|...&#x000A;  lua_pop(state, 2);                               //        ...&#x000A;  &#x000A;  return value;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-5B-5D-3D'>
+                <a name='method-i-5B-5D-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table[key] = value -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets value associated with <code>key</code> to <code>value</code> in <a
+                  href="../Lua.html">Lua</a> table. May invoke <a href="../Lua.html">Lua</a>
+                  <code>__newindex</code> metamethod.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-5B-5D-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-5B-5D-3D-source'>static VALUE rbLuaTable_set(VALUE self, VALUE index, VALUE value)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, index);                     //        |indx|this|...&#x000A;  rlua_push_var(state, value);                     //        |valu|indx|this|...&#x000A;  lua_settable(state, -3);                         //        |this|...&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;&#x000A;  return value;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__equal'>
+                <a name='method-i-__equal'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>this.__equal(other) -> true or false</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Compares <code>this</code> with <code>other</code> without calling any
+                  metamethods.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__equal-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__equal-source'>static VALUE rbLua_rawequal(VALUE self, VALUE other)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  int equal;&#x000A;  rlua_push_var(state, self);           // stack: |this|...&#x000A;  rlua_push_var(state, other);          //        |othr|this|...&#x000A;  equal = lua_rawequal(state, -1, -2);  //        |othr|this|...&#x000A;  lua_pop(state, 2);                    //        ...&#x000A;&#x000A;  return equal ? Qtrue : Qfalse;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__get'>
+                <a name='method-i-__get'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.__get(key) -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns value associated with <code>key</code> in <a
+                  href="../Lua.html">Lua</a> table without invoking any <a
+                  href="../Lua.html">Lua</a> metamethod (similar to <code>rawget</code> <a
+                  href="../Lua.html">Lua</a> function).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__get-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__get-source'>static VALUE rbLuaTable_rawget(VALUE self, VALUE index)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE value;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, index);                     //        |indx|this|...&#x000A;  lua_rawget(state, -2);                           //        |valu|this|...&#x000A;  value = rlua_get_var(state);                     //        |valu|this|...&#x000A;  lua_pop(state, 2);                               //        ...&#x000A;  &#x000A;  return value;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__length'>
+                <a name='method-i-__length'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.__length -> int</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns table length as with <a href="../Lua.html">Lua</a> length #
+                  operator. Will not call any metamethod because __len metamethod has no
+                  effect when defined on table (and string).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__length-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__length-source'>static VALUE rbLuaTable_length(VALUE self)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE length;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  length = INT2FIX(lua_objlen(state, -1));&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;  &#x000A;  return length;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__metatable'>
+                <a name='method-i-__metatable'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.__metatable() -> Lua::Table or nil</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns metatable of this table or nil if it is not present.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__metatable-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__metatable-source'>static VALUE rbLuaTable_get_metatable(VALUE self)&#x000A;{&#x000A;  return rbLua_get_metatable(self, self);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__metatable-3D'>
+                <a name='method-i-__metatable-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.__metatable=(metatable) -> metatable</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets metatable for this table. <code>metatable</code> can be <a
+                  href="Table.html">Lua::Table</a> or Hash.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__metatable-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__metatable-3D-source'>static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)&#x000A;{&#x000A;  return rbLua_set_metatable(self, self, metatable);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__set'>
+                <a name='method-i-__set'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.__set(key, value) -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets value associated with <code>key</code> to <code>value</code> in <a
+                  href="../Lua.html">Lua</a> table without invoking any <a
+                  href="../Lua.html">Lua</a> metamethod (similar to <code>rawset</code> <a
+                  href="../Lua.html">Lua</a> function).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__set-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__set-source'>static VALUE rbLuaTable_rawset(VALUE self, VALUE index, VALUE value)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, index);                     //        |indx|this|...&#x000A;  rlua_push_var(state, value);                     //        |valu|indx|this|...&#x000A;  lua_rawset(state, -3);                           //        |this|...&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;&#x000A;  return value;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-each'>
+                <a name='method-i-each'></a>
+                <div class='synopsis'>
+                  <span class='name'>each</span>
+                  <span class='arguments'>(&block)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Traverses the table using <a href="Table.html#method-c-next">::next</a>
+                  function.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-each-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-each-source'><span class="ruby-comment"># File lib/rlua.rb, line 21</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">each</span>(&amp;<span class="ruby-identifier">block</span>)&#x000A;  <span class="ruby-identifier">key</span> = <span class="ruby-keyword">nil</span>&#x000A;  <span class="ruby-identifier">loop</span> {&#x000A;    <span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span> = *<span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">next</span>(<span class="ruby-keyword">self</span>, <span class="ruby-identifier">key</span>)&#x000A;    <span class="ruby-keyword">break</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">nil?</span>&#x000A;    <span class="ruby-identifier">block</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;  }&#x000A;  <span class="ruby-keyword">self</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-inspect'>
+                <a name='method-i-inspect'></a>
+                <div class='synopsis'>
+                  <span class='name'>inspect</span>
+                  <span class='arguments'>(trace=[])</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Recursively pretty-prints the table properly handling reference loops.</p>
+                  
+                  <p><code>trace</code> argument is internal, do not use it.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-inspect-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-inspect-source'><span class="ruby-comment"># File lib/rlua.rb, line 55</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">inspect</span>(<span class="ruby-identifier">trace</span>=[])&#x000A;  <span class="ruby-keyword">if</span> <span class="ruby-identifier">to_hash</span>.<span class="ruby-identifier">empty?</span>&#x000A;    <span class="ruby-string">&quot;L{}&quot;</span>&#x000A;  <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">trace</span>.<span class="ruby-identifier">include?</span> <span class="ruby-keyword">self</span>&#x000A;    <span class="ruby-string">&quot;L{...}&quot;</span>&#x000A;  <span class="ruby-keyword">else</span>&#x000A;    <span class="ruby-identifier">trace</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-keyword">self</span>&#x000A;    <span class="ruby-identifier">v</span> = []&#x000A;    <span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span><span class="ruby-operator">|</span>&#x000A;      <span class="ruby-identifier">s</span> = <span class="ruby-string">&quot;&quot;</span>&#x000A;      <span class="ruby-keyword">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>&#x000A;        <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">inspect</span>(<span class="ruby-identifier">trace</span>)&#x000A;      <span class="ruby-keyword">else</span>&#x000A;        <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">inspect</span>&#x000A;      <span class="ruby-keyword">end</span>&#x000A;      <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-string">&quot; =&gt; &quot;</span>&#x000A;      <span class="ruby-keyword">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">class</span> <span class="ruby-operator">==</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">class</span>&#x000A;        <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">inspect</span>(<span class="ruby-identifier">trace</span>)&#x000A;      <span class="ruby-keyword">else</span>&#x000A;        <span class="ruby-identifier">s</span> <span class="ruby-operator">+=</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">inspect</span>&#x000A;      <span class="ruby-keyword">end</span>&#x000A;      <span class="ruby-identifier">v</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">s</span>&#x000A;    }&#x000A;    <span class="ruby-node">&quot;L{#{v.join ', '}}&quot;</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-method_missing'>
+                <a name='method-i-method_missing'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>table.method_missing(method, *args) -> *values</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>This method allows accessing <a href="../Lua.html">Lua</a> tables much as
+                  if they were Ruby objects.</p>
+                  
+                  <p><strong>Setting values</strong> can be done with a standard <em>setter
+                  method</em>: <code>table.key = value</code> is equivalent to
+                  <code>table["key"] = value</code>.</p>
+                  
+                  <p><strong>Getting values</strong> is as easy as setting: if the value is not
+                  a function, <code>table.key</code> is equivalent to
+                  <code>table["key"]</code>.</p>
+                  
+                  <p>If some table has a function as value, you can <strong>invoke
+                  methods</strong> on it. <code>table.method(arg1, ..., argN)</code> is
+                  equivalent to <code>table["method"].call(arg1, ..., argN)</code>, and
+                  <code>table.method!(arg1, ..., argN)</code> is equivalent to
+                  <code>table["method"].call(table, arg1, ..., argN)</code>. To get a
+                  reference to function you should use the <code>table["method"]</code>
+                  notation.</p>
+                  
+                  <p>If the value is not present in table (which is equivalent to
+                  <code>nil</code> value in <a href="../Lua.html">Lua</a>) MethodNotFound
+                  exception will be raised; if you will attempt to call something which is
+                  not a function as a method, TypeError exception will be raised.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-method_missing-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-method_missing-source'>static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)&#x000A;{&#x000A;  VALUE id, args;&#x000A;  rb_scan_args(argc, argv, &quot;1*&quot;, &amp;id, &amp;args);&#x000A;&#x000A;  VALUE name = rb_str_new2(rb_id2name(rb_to_id(id)));&#x000A;  &#x000A;  int is_method = 0;&#x000A;  int is_assign = 0;&#x000A;  if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '!')&#x000A;    is_method = 1;&#x000A;  if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '=')&#x000A;    is_assign = 1;&#x000A;  &#x000A;  if(is_method || is_assign)&#x000A;    rb_str_resize(name, RSTRING_LEN(name) - 1);&#x000A;  &#x000A;  if(is_assign) {&#x000A;    VALUE value;&#x000A;    rb_scan_args(argc, argv, &quot;11&quot;, &amp;id, &amp;value);&#x000A;    return rbLuaTable_set(self, name, value);&#x000A;  } else {&#x000A;    VALUE value = rbLuaTable_get(self, name);&#x000A;    if(value == Qnil) {&#x000A;      return rb_call_super(argc, argv);&#x000A;    } else if(rb_obj_class(value) != cLuaFunction) {&#x000A;      if(is_method)&#x000A;        rb_raise(rb_eTypeError, &quot;%s is not a Lua::Function&quot;, RSTRING_PTR(name));&#x000A;      return value;&#x000A;    } else {&#x000A;      if(is_method)&#x000A;        rb_ary_unshift(args, self);&#x000A;      return rbLuaFunction_call(value, args);&#x000A;    }&#x000A;  }&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-to_ary'>
+                <a name='method-i-to_ary'></a>
+                <div class='synopsis'>
+                  <span class='name'>to_ary</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Converts table to array. Only integer indexes are used.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-to_ary-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-to_ary-source'><span class="ruby-comment"># File lib/rlua.rb, line 39</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">to_ary</span>&#x000A;  <span class="ruby-identifier">ary</span> = []&#x000A;  <span class="ruby-value">1</span>.<span class="ruby-identifier">upto</span>(<span class="ruby-identifier">__length</span>) { <span class="ruby-operator">|</span><span class="ruby-identifier">i</span><span class="ruby-operator">|</span>&#x000A;    <span class="ruby-keyword">if</span> <span class="ruby-keyword">self</span>[<span class="ruby-identifier">i</span>]&#x000A;      <span class="ruby-identifier">ary</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-keyword">self</span>[<span class="ruby-identifier">i</span>]&#x000A;    <span class="ruby-keyword">else</span>&#x000A;      <span class="ruby-keyword">break</span>&#x000A;    <span class="ruby-keyword">end</span>&#x000A;  }&#x000A;  <span class="ruby-identifier">ary</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-to_hash'>
+                <a name='method-i-to_hash'></a>
+                <div class='synopsis'>
+                  <span class='name'>to_hash</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Non-recursively converts table to hash.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-to_hash-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-to_hash-source'><span class="ruby-comment"># File lib/rlua.rb, line 32</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">to_hash</span>&#x000A;  <span class="ruby-identifier">hash</span> = {}&#x000A;  <span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">hash</span>[<span class="ruby-identifier">k</span>] = <span class="ruby-identifier">v</span> }&#x000A;  <span class="ruby-identifier">hash</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

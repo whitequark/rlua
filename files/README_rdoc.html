@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>README.rdoc</title>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+    <link href='../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='file' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>README.rdoc</h1>
+        <div class='paths'>
+          README.rdoc
+        </div>
+        <div class='last-update'>
+          Last Update:
+          <span class='datetime'>2012-09-07 11:07:35 +0400</span>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <h1 id="label-Description">Description</h1>
+            
+            <p>RLua is Ruby to <a href="../classes/Lua.html">Lua</a> bindings library that
+            features almost full coverage of <a href="../classes/Lua.html">Lua</a> C
+            API, seamless translation of <a href="../classes/Lua.html">Lua</a> and Ruby
+            objects into each other, calling <a href="../classes/Lua.html">Lua</a>
+            functions from Ruby and vice versa.</p>
+            
+            <p>RLua currently uses <a href="../classes/Lua.html">Lua</a> 5.1, and is Ruby
+            1.8, 1.9 and 1.9.1 compatible.</p>
+            
+            <h1 id="label-Installation">Installation</h1>
+            
+            <p>RLua is distributed as gem package through rubygems.org, so the procedure
+            is quite usual. It uses native <a href="../classes/Lua.html">Lua</a> C API,
+            so it will need to compile an extension during installation.</p>
+            
+            <p>On Linux, you will need to install <a href="../classes/Lua.html">Lua</a>
+            development files first. They are packaged as <code>liblua5.1-dev</code> in
+            Debian and it’s derivatives (like Ubuntu). After that you can simply run
+            <code>gem install rlua</code>.</p>
+            
+            <p>On Windows, you will need MSVC to compile everything. Through I did not
+            tested this (and so cannot provide a detailed description), it should work
+            fine.</p>
+            
+            <h1 id="label-Example+code">Example code</h1>
+            
+            <pre class="ruby"><span class="ruby-identifier">require</span> <span class="ruby-string">'rlua'</span>&#x000A;&#x000A;<span class="ruby-identifier">state</span> = <span class="ruby-constant">Lua</span><span class="ruby-operator">::</span><span class="ruby-constant">State</span>.<span class="ruby-identifier">new</span>   <span class="ruby-comment"># create Lua interpreter</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__load_stdlib</span> :<span class="ruby-identifier">all</span> <span class="ruby-comment"># load some standard libraries in it</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span> <span class="ruby-string">&quot;print('hello, world')&quot;</span> <span class="ruby-comment"># launch some Lua code</span>&#x000A;&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">value</span> = <span class="ruby-value">10</span>            <span class="ruby-comment"># set a variable in Ruby</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span> <span class="ruby-string">&quot;print(value)&quot;</span> <span class="ruby-comment"># show it's value from Lua</span>&#x000A;&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span> <span class="ruby-string">&quot;value = 15&quot;</span>   <span class="ruby-comment"># set a variable in Lua</span>&#x000A;<span class="ruby-identifier">p</span> <span class="ruby-identifier">state</span>.<span class="ruby-identifier">value</span>               <span class="ruby-comment"># show it's value from Ruby</span>&#x000A;&#x000A;<span class="ruby-comment"># create a function in Lua</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span> <span class="ruby-string">&quot;function lua_func() print('hello from Lua') end&quot;</span>&#x000A;<span class="ruby-comment"># launch it from Ruby</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">lua_func</span>&#x000A;&#x000A;<span class="ruby-comment"># create a table in Ruby and method in it</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">ruby</span> = {&#x000A;  <span class="ruby-string">'meaning_of_life'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">42</span>,&#x000A;  <span class="ruby-string">'zaphod'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">lambda</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">this</span><span class="ruby-operator">|</span>&#x000A;    <span class="ruby-identifier">p</span> <span class="ruby-node">&quot;Meaning of life: #{this.meaning_of_life}&quot;</span>&#x000A;  }&#x000A;}&#x000A;<span class="ruby-comment"># launch that from Lua as instance method</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span> <span class="ruby-string">&quot;ruby:zaphod()&quot;</span></pre>
+            
+            <h1 id="label-Type+conversion">Type conversion</h1>
+            
+            <p><a href="../classes/Lua.html">Lua</a> and Ruby types are seamlessly
+            translated into each other when calling functions, changing tables and so
+            on. The translation is conservative: you can convert a value from Ruby to
+            <a href="../classes/Lua.html">Lua</a>, then backwards and will always
+            receive an object that will behave absolutely the same.</p>
+            
+            <p>Here is a table of type mapping:</p>
+            <dl class="rdoc-list note-list"><dt><strong>Ruby type</strong>
+            <dd>
+            <p><strong><a href="../classes/Lua.html">Lua</a> type</strong></p>
+            </dd><dt>nil
+            <dd>
+            <p>nil</p>
+            </dd><dt>Boolean (TrueClass or FalseClass)
+            <dd>
+            <p>true or false</p>
+            </dd><dt>Fixnum, Bignum or Float
+            <dd>
+            <p>number</p>
+            </dd><dt>Proc
+            <dd>
+            <p>function</p>
+            </dd><dt>String
+            <dd>
+            <p>string</p>
+            </dd><dt>Hash
+            <dd>
+            <p>table</p>
+            </dd><dt>Array
+            <dd>
+            <p>table (with numeric keys)</p>
+            </dd></dl>
+            
+            <p>Hashes and Arrays are translated recursively: all keys and values are
+            translated too. Getting any <a href="../classes/Lua.html">Lua</a> function
+            to Ruby code (even the Ruby proc that was translated  before) results in <a
+            href="../classes/Lua/Function.html">Lua::Function</a> created, and tables
+            behave the same creating <a href="../classes/Lua/Table.html">Lua::Table</a>
+            object.</p>
+            
+            <p>Proc objects are duck-typed: anything that responds to <code>call</code>
+            method is considered Proc.</p>
+            
+            <p>Translation of any object not in the list is impossible and will generate
+            an TypeError exception.</p>
+            
+            <h1 id="label-Notes">Notes</h1>
+            
+            <p>Most functions are named much like their C API counterparts.</p>
+            
+            <p>‘Ruby-object-like’ table indexing convention is described in <a
+            href="../classes/Lua/Table.html">Lua::Table</a>, and function calling is
+            described in <a href="../classes/Lua/Function.html">Lua::Function</a>.</p>
+            
+            <p>Everything not currently implemented is described in <a
+            href="TODO_rdoc.html">TODO list</a>.</p>
+            
+            <h1 id="label-Author">Author</h1>
+            
+            <p>RLua is currently developed solely by Peter Zotov (<a
+            href="mailto:whitequark@whitequark.org">whitequark@whitequark.org</a>).
+            Feel free to email me if you encounter any bugs.</p>
+            
+            <h1 id="label-License">License</h1>
+            
+            <pre>This program is free software: you can redistribute it and/or modify&#x000A;it under the terms of the GNU Lesser General Public License as published by&#x000A;the Free Software Foundation, either version 3 of the License, or&#x000A;(at your option) any later version.&#x000A;This program is distributed in the hope that it will be useful,&#x000A;but WITHOUT ANY WARRANTY; without even the implied warranty of&#x000A;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the&#x000A;GNU Lesser General Public License for more details.&#x000A;&#x000A;You should have received a copy of the GNU Lesser General Public License&#x000A;along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</pre>
+          </div>
+          <div id='context'>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

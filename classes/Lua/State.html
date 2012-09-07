@@ -1,0 +1,338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>Lua::State</title>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+    <link href='../../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>class</span>
+          Lua::State
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a target="docwin" href="../../files/ext/rlua_c.html">ext/rlua.c</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong><a target="docwin" href="../Lua.html">Lua</a></strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <p><a href="State.html">Lua::State</a> represents <a
+            href="../Lua.html">Lua</a> interpreter state which is one thread of
+            execution.</p>
+          </div>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>Public Class</h3>
+            <ol>
+              <li><a target="docwin" href="#method-c-new">new</a></li>
+            </ol>
+            <h3>Public Instance</h3>
+            <ol>
+              <li><a target="docwin" href="#method-i-5B-5D">[]</a></li>
+              <li><a target="docwin" href="#method-i-5B-5D-3D">[]=</a></li>
+              <li><a target="docwin" href="#method-i-__bootstrap">__bootstrap</a></li>
+              <li><a target="docwin" href="#method-i-__env">__env</a></li>
+              <li><a target="docwin" href="#method-i-__env-3D">__env=</a></li>
+              <li><a target="docwin" href="#method-i-__eval">__eval</a></li>
+              <li><a target="docwin" href="#method-i-__get_metatable">__get_metatable</a></li>
+              <li><a target="docwin" href="#method-i-__load_stdlib">__load_stdlib</a></li>
+              <li><a target="docwin" href="#method-i-__set_metatable">__set_metatable</a></li>
+              <li><a target="docwin" href="#method-i-method_missing">method_missing</a></li>
+            </ol>
+          </div>
+          <div id='context'>
+          </div>
+          <div id='section'>
+            <div id='methods'>
+              <h2>Public Class methods</h2>
+              <div class='method public-class' id='method-method-c-new'>
+                <a name='method-c-new'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>Lua::State.new</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Creates a new <a href="../Lua.html">Lua</a> state.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-new-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-new-source'>static VALUE rbLua_initialize(VALUE self)&#x000A;{&#x000A;  lua_State* state = luaL_newstate();&#x000A;  &#x000A;  VALUE rbState = Data_Wrap_Struct(rb_cObject, 0, lua_close, state);&#x000A;  rb_iv_set(self, &quot;@state&quot;, rbState);&#x000A;  &#x000A;  lua_pushlightuserdata(state, (void*) self);&#x000A;  lua_setfield(state, LUA_REGISTRYINDEX, &quot;rlua_state&quot;);&#x000A;  &#x000A;  lua_newtable(state);&#x000A;  lua_setfield(state, LUA_REGISTRYINDEX, &quot;rlua&quot;);&#x000A;  &#x000A;  rb_iv_set(rbState, &quot;@refs&quot;, rb_hash_new());&#x000A;  rb_iv_set(rbState, &quot;@procs&quot;, rb_ary_new());&#x000A;  &#x000A;  return self;&#x000A;}</pre>
+                </div>
+              </div>
+              <h2>Public Instance methods</h2>
+              <div class='method public-instance' id='method-method-i-5B-5D'>
+                <a name='method-i-5B-5D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state[key] -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns value of a global variable. Equivalent to <a
+                  href="http://key">__env</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-5B-5D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-5B-5D-source'>static VALUE rbLua_get_global(VALUE self, VALUE index)&#x000A;{&#x000A;  VALUE globals = rbLua_get_env(self);&#x000A;  return rbLuaTable_get(globals, index);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-5B-5D-3D'>
+                <a name='method-i-5B-5D-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state[key] = value -> value</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets value for a global variable. Equivalent to <a
+                  href="http://key">__env</a> = value.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-5B-5D-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-5B-5D-3D-source'>static VALUE rbLua_set_global(VALUE self, VALUE index, VALUE value)&#x000A;{&#x000A;  return rbLuaTable_set(rbLua_get_env(self), index, value);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__bootstrap'>
+                <a name='method-i-__bootstrap'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.__bootstrap() -> true</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Deploys an absolute minimum of functions required to write minimally useful
+                  <a href="../Lua.html">Lua</a> programs. This is really a subset of <a
+                  href="../Lua.html">Lua</a> <em>base</em> library (copied from <a
+                  href="../Lua.html">Lua</a> 5.1 sources) that may be handy if you don’t like
+                  standard function layout. All of these functions can be implemented in pure
+                  Ruby, but that will slow down <a href="../Lua.html">Lua</a> code
+                  incredibly.</p>
+                  
+                  <p><strong>If you want to get familiar layout described in <a
+                  href="../Lua.html">Lua</a> documentation, check #<a
+                  href="State.html#method-i-__load_stdlib">#__load_stdlib</a>
+                  function.</strong></p>
+                  
+                  <p>Exact list of functions defined: type, next, tonumber, tostring, unpack,
+                  select, error, assert, pcall, xpcall.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__bootstrap-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__bootstrap-source'>static VALUE rbLua_bootstrap(VALUE self)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  int nf;&#x000A;  for(nf = 0; nf &lt; sizeof(stdlib) / sizeof(stdlib[0]); nf++) {&#x000A;    lua_pushcclosure(state, stdlib[nf].func, 0);&#x000A;    lua_setglobal(state, stdlib[nf].name);&#x000A;  }&#x000A;  &#x000A;  lua_pushcfunction(state, bootstrap_next);&#x000A;  lua_pushcclosure(state, bootstrap_pairs, 1);&#x000A;  lua_setglobal(state, &quot;pairs&quot;);&#x000A;  &#x000A;  lua_pushcfunction(state, bootstrap_inext);&#x000A;  lua_pushcclosure(state, bootstrap_ipairs, 1);&#x000A;  lua_setglobal(state, &quot;ipairs&quot;);&#x000A;  &#x000A;  return Qtrue;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__env'>
+                <a name='method-i-__env'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>object.__env() -> Lua::Table</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns environment table of <a href="State.html">Lua::State</a> or <a
+                  href="Function.html">Lua::Function</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__env-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__env-source'>static VALUE rbLua_get_env(VALUE self)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE ref;&#x000A;  rlua_push_var(state, self);                   // stack: |this|...&#x000A;  lua_getfenv(state, -1);                       //        |envi|this|...&#x000A;  ref = rlua_makeref(state);                    //        |envi|this|...&#x000A;  lua_pop(state, 2);                            //        ...&#x000A;&#x000A;  return rb_funcall(cLuaTable, rb_intern(&quot;new&quot;), 2, self, ref);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__env-3D'>
+                <a name='method-i-__env-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>object.__env=(table) -> table</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets environment table for <a href="State.html">Lua::State</a> or <a
+                  href="Function.html">Lua::Function</a>. <code>table</code> may be a <a
+                  href="Table.html">Lua::Table</a> or a Hash.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__env-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__env-3D-source'>static VALUE rbLua_set_env(VALUE self, VALUE env)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  if(rb_obj_class(env) != cLuaTable &amp;&amp; TYPE(env) != T_HASH)&#x000A;    rb_raise(rb_eTypeError, &quot;wrong argument type %s (expected Lua::Table or Hash)&quot;, rb_obj_classname(env));&#x000A;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, env);                       //        |envi|this|...&#x000A;  lua_setfenv(state, -2);                          //        |this|...&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;  &#x000A;  return env;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__eval'>
+                <a name='method-i-__eval'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.__eval(code[, chunkname='=&lt;eval&gt;']) -> *values</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Runs <code>code</code> in <a href="../Lua.html">Lua</a> interpreter.
+                  Optional argument <code>chunkname</code> specifies a string that will be
+                  used in error messages and other debug information as a file name.</p>
+                  
+                  <p>Start <code>chunkname</code> with a @ to make <a href="../Lua.html">Lua</a>
+                  think the following is filename (e.g. @test.lua); start it with a = to
+                  indicate a non-filename stream (e.g. =stdin). Anything other is interpreted
+                  as a plaintext <a href="../Lua.html">Lua</a> code and a few starting
+                  characters will be shown.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__eval-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__eval-source'>static VALUE rbLua_eval(int argc, VALUE* argv, VALUE self)&#x000A;{&#x000A;  VALUE code, chunkname;&#x000A;  rb_scan_args(argc, argv, &quot;11&quot;, &amp;code, &amp;chunkname);&#x000A;&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  if(chunkname == Qnil)&#x000A;    chunkname = rb_str_new2(&quot;=&lt;eval&gt;&quot;);&#x000A;&#x000A;  rlua_load_string(state, code, chunkname);&#x000A;  &#x000A;  return rlua_pcall(state, 0);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__get_metatable'>
+                <a name='method-i-__get_metatable'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.__get_metatable(object) -> Lua::Table or nil</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns metatable of any valid <a href="../Lua.html">Lua</a> object or nil
+                  if it is not present. If you want to get metatables of non-table objects
+                  (e.g. numbers) just pass their Ruby equivalent.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__get_metatable-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__get_metatable-source'>static VALUE rbLua_get_metatable(VALUE self, VALUE object)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  rlua_push_var(state, object);                 // stack: |objt|...&#x000A;  if(lua_getmetatable(state, -1)) {             //        |meta|objt|...&#x000A;    VALUE ref = rlua_makeref(state);            //        |meta|objt|...&#x000A;    lua_pop(state, 2);                          //        ...&#x000A;    &#x000A;    return rb_funcall(cLuaTable, rb_intern(&quot;new&quot;), 2, self, ref);&#x000A;  } else {                                      //        |objt|...&#x000A;    lua_pop(state, 1);                          //        ...&#x000A;    &#x000A;    return Qnil;&#x000A;  }&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__load_stdlib'>
+                <a name='method-i-__load_stdlib'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.__load_stdlib(*libs) -> true</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Loads <a href="../Lua.html">Lua</a> standard libraries. There are two ways
+                  of calling this function:</p>
+                  
+                  <p>If you will call it as <a
+                  href="State.html#method-i-__load_stdlib">#__load_stdlib</a>(:all), it is
+                  equivalent to calling C <code>luaL_openlibs</code> function.</p>
+                  
+                  <p>If you will pass it symbolized names of separate libraries (like :base), it
+                  is equivalent to calling corresponding <code>luaopen_*</code> functions.</p>
+                  
+                  <p>Examples:</p>
+                  
+                  <pre># Load all standard libraries&#x000A;state = Lua::State.new&#x000A;state.__load_stdlib :all&#x000A;# Load only math, string and table libraries&#x000A;state = Lua::State.new&#x000A;state.__load_stdlib :math, :string, :table</pre>
+                  
+                  <p>Exact list of libraries recognized: <code>:base</code>,
+                  <code>:table</code>, <code>:math</code>, <code>:string</code>,
+                  <code>:debug</code>, <code>:io</code>, <code>:os</code>,
+                  <code>:package</code>. <strong>Anything not included in this list will be
+                  silently ignored.</strong></p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__load_stdlib-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__load_stdlib-source'>static VALUE rbLua_load_stdlib(VALUE self, VALUE args)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  if(rb_ary_includes(args, ID2SYM(rb_intern(&quot;all&quot;)))) {&#x000A;    luaL_openlibs(state);&#x000A;  } else {&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(&quot;base&quot;))))&#x000A;      rlua_openlib(state, luaopen_base);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_TABLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_table);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_MATHLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_math);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_STRLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_string);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_DBLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_debug);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_IOLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_io);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_OSLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_os);&#x000A;    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_LOADLIBNAME))))&#x000A;      rlua_openlib(state, luaopen_package);&#x000A;  }&#x000A;  &#x000A;  return Qtrue;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__set_metatable'>
+                <a name='method-i-__set_metatable'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.__set_metatable=(object, metatable) -> metatable</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets metatable for any valid <a href="../Lua.html">Lua</a> object.
+                  <code>metatable</code> can be <a href="Table.html">Lua::Table</a> or Hash.
+                  If you want to set metatables for non-table objects (e.g. numbers) just
+                  pass their Ruby equivalent.</p>
+                  
+                  <pre class="ruby"><span class="ruby-comment"># Implement concatenation operator for Lua strnigs.</span>&#x000A;<span class="ruby-identifier">state</span> = <span class="ruby-constant">Lua</span><span class="ruby-operator">::</span><span class="ruby-constant">State</span>.<span class="ruby-identifier">new</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__set_metatable</span>(<span class="ruby-string">&quot;&quot;</span>, { <span class="ruby-string">'__add'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">lambda</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">a</span>, <span class="ruby-identifier">b</span><span class="ruby-operator">|</span> <span class="ruby-identifier">a</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">b</span> } })&#x000A;<span class="ruby-identifier">p</span> <span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span>(<span class="ruby-string">'return &quot;hello,&quot; + &quot; world&quot;'</span>) <span class="ruby-comment"># =&gt; &quot;hello, world&quot;</span></pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__set_metatable-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__set_metatable-source'>static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  if(rb_obj_class(metatable) != cLuaTable &amp;&amp; TYPE(metatable) != T_HASH)&#x000A;    rb_raise(rb_eTypeError, &quot;wrong argument type %s (expected Lua::Table or Hash)&quot;, rb_obj_classname(metatable));&#x000A;&#x000A;  rlua_push_var(state, object);                    // stack: |objt|...&#x000A;  rlua_push_var(state, metatable);                 //        |meta|objt|...&#x000A;  lua_setmetatable(state, -2);                     //        |objt|...&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;  &#x000A;  return metatable;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-method_missing'>
+                <a name='method-i-method_missing'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>state.method_missing(method, *args) -> *values</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>See <a
+                  href="Table.html#method-i-method_missing">Lua::Table#method_missing</a>.
+                  Equivalent to __env.method_missing(method, *args).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-method_missing-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-method_missing-source'>static VALUE rbLua_method_missing(int argc, VALUE* argv, VALUE self)&#x000A;{&#x000A;  return rbLuaTable_method_missing(argc, argv, rbLua_get_env(self));&#x000A;}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>Lua::Function</title>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
+    <link href='../../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>class</span>
+          Lua::Function
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a target="docwin" href="../../files/ext/rlua_c.html">ext/rlua.c</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong><a target="docwin" href="../Lua.html">Lua</a></strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <p><a href="State.html">Lua::State</a> represents <a
+            href="../Lua.html">Lua</a> interpreter state which is one thread of
+            execution.</p>
+          </div>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>Public Class</h3>
+            <ol>
+              <li><a target="docwin" href="#method-c-new">new</a></li>
+            </ol>
+            <h3>Public Instance</h3>
+            <ol>
+              <li><a target="docwin" href="#method-i-3D-3D">==</a></li>
+              <li><a target="docwin" href="#method-i-__env">__env</a></li>
+              <li><a target="docwin" href="#method-i-__env-3D">__env=</a></li>
+              <li><a target="docwin" href="#method-i-__equal">__equal</a></li>
+              <li><a target="docwin" href="#method-i-call">call</a></li>
+            </ol>
+          </div>
+          <div id='context'>
+          </div>
+          <div id='section'>
+            <div id='methods'>
+              <h2>Public Class methods</h2>
+              <div class='method public-class' id='method-method-c-new'>
+                <a name='method-c-new'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>Lua::Function.new(state, proc)</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Converts a Ruby closure <code>proc</code> to a <a
+                  href="../Lua.html">Lua</a> function in <a href="State.html">Lua::State</a>
+                  represented by <code>state</code>. Note that you generally do not need to
+                  call this function explicitly: any <code>proc</code> or <code>lambda</code>
+                  passed as a value for table assignment will be automagically converted to
+                  <a href="../Lua.html">Lua</a> closure.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-new-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-new-source'>static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)&#x000A;{&#x000A;  VALUE rbLuaState, ref = Qnil, func;&#x000A;  rb_scan_args(argc, argv, &quot;11&quot;, &amp;rbLuaState, &amp;func);&#x000A;  &#x000A;  if(rb_obj_class(rbLuaState) != cLuaState)&#x000A;    rb_raise(rb_eTypeError, &quot;wrong argument type %s (expected Lua::State)&quot;, rb_obj_classname(rbLuaState));&#x000A;  &#x000A;  VALUE rbState = rb_iv_get(rbLuaState, &quot;@state&quot;);&#x000A;  rb_iv_set(self, &quot;@state&quot;, rbState);&#x000A;  &#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rbState, lua_State, state);&#x000A;  &#x000A;  VALUE proc = Qnil;&#x000A;  &#x000A;  if(TYPE(func) == T_FIXNUM)&#x000A;    ref = func;&#x000A;  else if(rb_respond_to(func, rb_intern(&quot;call&quot;)))&#x000A;    proc = func;&#x000A;  else&#x000A;    rb_raise(rb_eTypeError, &quot;wrong argument type %s (expected Proc)&quot;, rb_obj_classname(func));&#x000A;&#x000A;  if(ref == Qnil) {&#x000A;    lua_pushlightuserdata(state, (void*) proc);&#x000A;    lua_pushcclosure(state, call_ruby_proc, 1);&#x000A;    ref = rlua_makeref(state);&#x000A;    lua_pop(state, 1);&#x000A;    &#x000A;    // don't allow GC to collect proc&#x000A;    rb_iv_set(self, &quot;@proc&quot;, proc);&#x000A;  }&#x000A;  &#x000A;  rlua_add_ref_finalizer(rbState, ref, self);&#x000A;&#x000A;  rb_iv_set(self, &quot;@ref&quot;, ref);&#x000A;  &#x000A;  return self;&#x000A;}</pre>
+                </div>
+              </div>
+              <h2>Public Instance methods</h2>
+              <div class='method public-instance' id='method-method-i-3D-3D'>
+                <a name='method-i-3D-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>this == other -> true or false</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Compares <code>this</code> with <code>other</code>. May call
+                  <code>__eq</code> metamethod.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-3D-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-3D-3D-source'>static VALUE rbLua_equal(VALUE self, VALUE other)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  int equal;&#x000A;  rlua_push_var(state, self);           // stack: |this|...&#x000A;  rlua_push_var(state, other);          //        |othr|this|...&#x000A;  equal = lua_equal(state, -1, -2);     //        |othr|this|...&#x000A;  lua_pop(state, 2);                    //        ...&#x000A;&#x000A;  return equal ? Qtrue : Qfalse;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__env'>
+                <a name='method-i-__env'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>object.__env() -> Lua::Table</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Returns environment table of <a href="State.html">Lua::State</a> or <a
+                  href="Function.html">Lua::Function</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__env-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__env-source'>static VALUE rbLua_get_env(VALUE self)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  VALUE ref;&#x000A;  rlua_push_var(state, self);                   // stack: |this|...&#x000A;  lua_getfenv(state, -1);                       //        |envi|this|...&#x000A;  ref = rlua_makeref(state);                    //        |envi|this|...&#x000A;  lua_pop(state, 2);                            //        ...&#x000A;&#x000A;  return rb_funcall(cLuaTable, rb_intern(&quot;new&quot;), 2, self, ref);&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__env-3D'>
+                <a name='method-i-__env-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>object.__env=(table) -> table</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Sets environment table for <a href="State.html">Lua::State</a> or <a
+                  href="Function.html">Lua::Function</a>. <code>table</code> may be a <a
+                  href="Table.html">Lua::Table</a> or a Hash.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__env-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__env-3D-source'>static VALUE rbLua_set_env(VALUE self, VALUE env)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;  &#x000A;  if(rb_obj_class(env) != cLuaTable &amp;&amp; TYPE(env) != T_HASH)&#x000A;    rb_raise(rb_eTypeError, &quot;wrong argument type %s (expected Lua::Table or Hash)&quot;, rb_obj_classname(env));&#x000A;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  rlua_push_var(state, env);                       //        |envi|this|...&#x000A;  lua_setfenv(state, -2);                          //        |this|...&#x000A;  lua_pop(state, 1);                               //        ...&#x000A;  &#x000A;  return env;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-__equal'>
+                <a name='method-i-__equal'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>this.__equal(other) -> true or false</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Compares <code>this</code> with <code>other</code> without calling any
+                  metamethods.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-__equal-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-__equal-source'>static VALUE rbLua_rawequal(VALUE self, VALUE other)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  int equal;&#x000A;  rlua_push_var(state, self);           // stack: |this|...&#x000A;  rlua_push_var(state, other);          //        |othr|this|...&#x000A;  equal = lua_rawequal(state, -1, -2);  //        |othr|this|...&#x000A;  lua_pop(state, 2);                    //        ...&#x000A;&#x000A;  return equal ? Qtrue : Qfalse;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-call'>
+                <a name='method-i-call'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    <div>func.call(*args) -> *values</div>
+                  </span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Invokes a <a href="../Lua.html">Lua</a> function in protected environment
+                  (like a <a href="../Lua.html">Lua</a> <code>xpcall</code>).</p>
+                  
+                  <p>One value returned in <a href="../Lua.html">Lua</a> is returned as one
+                  value in Ruby; multiple values returned in <a href="../Lua.html">Lua</a>
+                  are returned as an array of them in Ruby. This convention allows usage of
+                  identical code for calling methods with multiple return values in both
+                  languages.</p>
+                  
+                  <p>While you can easily call <a href="../Lua.html">Lua</a> procedures and use
+                  their return values, returning multiple values from Ruby is not that easy.
+                  RLua cannot guess whether array returned by Ruby function is a ‘real’ array
+                  or just several return values, so there is a <a
+                  href="../Lua.html#method-c-multret">Lua.multret</a> proxy method for that
+                  purpose. Ruby return values constructed with <code>multret</code> method
+                  are automatically unpacked to multiple return values. Example:</p>
+                  
+                  <pre class="ruby"><span class="ruby-identifier">state</span> = <span class="ruby-constant">Lua</span><span class="ruby-operator">::</span><span class="ruby-constant">State</span>.<span class="ruby-identifier">new</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">p</span> = <span class="ruby-identifier">lambda</span>{ <span class="ruby-operator">|</span>*<span class="ruby-identifier">args</span><span class="ruby-operator">|</span> <span class="ruby-identifier">p</span> *<span class="ruby-identifier">args</span> }&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">f1</span> = <span class="ruby-constant">Lua</span><span class="ruby-operator">::</span><span class="ruby-constant">Function</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-identifier">lambda</span>{ [ <span class="ruby-value">1</span>, <span class="ruby-value">2</span>, <span class="ruby-value">3</span> ] })&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">f2</span> = <span class="ruby-constant">Lua</span><span class="ruby-operator">::</span><span class="ruby-constant">Function</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-identifier">lambda</span>{ <span class="ruby-constant">Lua</span>.<span class="ruby-identifier">multret</span>( <span class="ruby-value">1</span>, <span class="ruby-value">2</span>, <span class="ruby-value">3</span> ) })&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span>(<span class="ruby-string">&quot;p(f1())&quot;</span>) <span class="ruby-comment"># results in { 1.0, 2.0, 3.0 } Lua table</span>&#x000A;                        <span class="ruby-comment"># shown as array</span>&#x000A;<span class="ruby-identifier">state</span>.<span class="ruby-identifier">__eval</span>(<span class="ruby-string">&quot;p(f2())&quot;</span>) <span class="ruby-comment"># results in 1.0, 2.0, 3.0 Lua multiple return values</span>&#x000A;                        <span class="ruby-comment"># shown as three separate values</span></pre>
+                  
+                  <p>Any <a href="../Lua.html">Lua</a> error that has appeared during the call
+                  will be raised as Ruby exception with message equal to <a
+                  href="../Lua.html">Lua</a> error message. *<a href="../Lua.html">Lua</a>
+                  error messages are explicitly converted to strings with
+                  <code>lua_tostring</code> function.* <a href="../Lua.html">Lua</a> errors
+                  are mapped as follows:</p>
+                  <dl class="rdoc-list note-list"><dt>LUA_ERRMEM
+                  <dd>
+                  <p>NoMemError is raised.</p>
+                  </dd><dt>LUA_ERRRUN
+                  <dd>
+                  <p>RuntimeError is raised.</p>
+                  </dd></dl>
+                  
+                  <p>Note that if any uncatched exception is raised in Ruby code inside <a
+                  href="Function.html">Lua::Function</a> it will be propagated as <a
+                  href="../Lua.html">Lua</a> error. *In this case the backtrace is lost!*
+                  Catch your exceptions in Ruby code if you want to keep their backtraces.</p>
+                  
+                  <p>This ‘drawback’ is intentional: while it is technically possible to
+                  re-raise the same Exception object, the backtrace will lead to re-raise
+                  point anyway.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-call-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-call-source'>static VALUE rbLuaFunction_call(VALUE self, VALUE args)&#x000A;{&#x000A;  lua_State* state;&#x000A;  Data_Get_Struct(rb_iv_get(self, &quot;@state&quot;), lua_State, state);&#x000A;&#x000A;  int i;&#x000A;  VALUE retval;&#x000A;&#x000A;  rlua_push_var(state, self);                      // stack: |this|...&#x000A;  for(i = 0; i &lt; RARRAY_LEN(args); i++)&#x000A;    rlua_push_var(state, RARRAY_PTR(args)[i]);&#x000A;                                                   //        |argN-arg1|this|...&#x000A;  retval = rlua_pcall(state, RARRAY_LEN(args));    //        ...&#x000A;&#x000A;  return retval;&#x000A;}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>
