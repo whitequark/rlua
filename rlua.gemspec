@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
   features seamless translation of most Lua and Ruby objects and calling
   code of each language from other one.
   EOD
-  gem.homepage      = "http://rlua.rubyforge.org"
+  gem.homepage      = "http://whitequark.github.com/rlua/"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
