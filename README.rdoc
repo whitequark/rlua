@@ -1,9 +1,9 @@
 = Description
-RLua is Ruby to Lua bindings library that features almost full coverage of Lua
+RLua is Ruby to Lua bindings library that features nearly complete coverage of Lua
 C API, seamless translation of Lua and Ruby objects into each other, calling Lua
 functions from Ruby and vice versa.
 
-RLua currently uses Lua 5.1, and is Ruby 1.8, 1.9 and 1.9.1 compatible.
+RLua currently uses Lua 5.1, and is Ruby 1.8.7 and 1.9.x compatible.
 
 = Installation
 RLua is distributed as gem package through rubygems.org, so the procedure is
@@ -20,7 +20,7 @@ this (and so cannot provide a detailed description), it should work fine.
 = Example code
 
   require 'rlua'
-  
+
   state = Lua::State.new   # create Lua interpreter
   state.__load_stdlib :all # load some standard libraries in it
   state.__eval "print('hello, world')" # launch some Lua code
@@ -63,7 +63,7 @@ Hash:: table
 Array:: table (with numeric keys)
 
 Hashes and Arrays are translated recursively: all keys and values are translated too.
-Getting any Lua function to Ruby code (even the Ruby proc that was translated 
+Getting any Lua function to Ruby code (even the Ruby proc that was translated
 before) results in Lua::Function created, and tables behave the same creating
 Lua::Table object.
 
