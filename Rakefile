@@ -26,6 +26,7 @@ namespace :github do
 
     git push origin gh-pages
 
+    cd ..
     rm gh-pages/ -rf
     END
   end
