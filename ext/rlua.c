@@ -1,21 +1,4 @@
-/*
- * This file is part of RLua.
- *
- * RLua is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- *
- * RLua is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with RLua.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <ruby.h> 
+#include <ruby.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
@@ -39,15 +22,15 @@ static VALUE rlua_finalize_ref(VALUE id, VALUE rbState)
 {
   lua_State* state;
   Data_Get_Struct(rbState, lua_State, state);
-  
+
   int ref = FIX2INT(rb_hash_aref(rb_iv_get(rbState, "@refs"), id));
-  
+
   lua_getfield(state, LUA_REGISTRYINDEX, "rlua");
   luaL_unref(state, -1, ref);
   lua_pop(state, 1);
-  
+
   rb_hash_delete(rb_iv_get(rbState, "@refs"), id);
-  
+
   return Qnil;
 }
 
@@ -83,7 +66,7 @@ static VALUE rlua_get_var(lua_State *state)
     case LUA_TLIGHTUSERDATA:
       rb_warn("cannot pop LUA_TLIGHTUSERDATA");
       return Qnil;
-    
+
     case LUA_TBOOLEAN:
       return lua_toboolean(state, -1) ? Qtrue : Qfalse;
 
@@ -116,16 +99,16 @@ static void rlua_push_var(lua_State *state, VALUE value)
       break;
 
     case T_STRING:
-      lua_pushlstring(state, RSTRING_PTR(value), RSTRING_LEN(value)); 
+      lua_pushlstring(state, RSTRING_PTR(value), RSTRING_LEN(value));
       break;
 
     case T_FIXNUM:
-      lua_pushnumber(state, FIX2INT(value)); 
+      lua_pushnumber(state, FIX2INT(value));
       break;
 
     case T_BIGNUM:
     case T_FLOAT:
-       lua_pushnumber(state, NUM2DBL(value)); 
+       lua_pushnumber(state, NUM2DBL(value));
        break;
 
     case T_ARRAY: {
@@ -200,7 +183,7 @@ static void rlua_load_string(lua_State* state, VALUE code, VALUE chunkname)
 
   // do not interfere with users' string
   VALUE interm_code = rb_str_new3(code);
-  
+
   int retval = lua_load(state, rlua_reader, (void*) interm_code, RSTRING_PTR(chunkname));
   if(retval != 0) {
     size_t errlen;
@@ -219,14 +202,14 @@ static VALUE rlua_pcall(lua_State* state, int argc)
   // stack: |argN-arg1|func|...
   //         <N pts.>  <1>
   int base = lua_gettop(state) - 1 - argc;
-  
+
   int retval = lua_pcall(state, argc, LUA_MULTRET, 0);
   if(retval != 0) {
     size_t errlen;
     const char* errstr = lua_tolstring(state, -1, &errlen);
     VALUE error = rb_str_new(errstr, errlen);
     lua_pop(state, 1);
-    
+
     if(retval == LUA_ERRRUN)
       rb_exc_raise(rb_exc_new3(rb_eRuntimeError, error));
     else if(retval == LUA_ERRSYNTAX)
@@ -260,7 +243,7 @@ static VALUE rbLuaTable_initialize(int argc, VALUE* argv, VALUE self)
 {
   VALUE rbLuaState, ref;
   rb_scan_args(argc, argv, "11", &rbLuaState, &ref);
-  
+
   VALUE stateSource = rb_obj_class(rbLuaState);
   if(stateSource != cLuaState && stateSource != cLuaTable && stateSource != cLuaFunction)
     rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::State, Lua::Table or Lua::Function)",
@@ -268,22 +251,22 @@ static VALUE rbLuaTable_initialize(int argc, VALUE* argv, VALUE self)
 
   VALUE rbState = rb_iv_get(rbLuaState, "@state");
   rb_iv_set(self, "@state", rbState);
-  
+
   if(ref == Qnil) {
     lua_State* state;
     Data_Get_Struct(rbState, lua_State, state);
-      
+
     lua_newtable(state);
     ref = rlua_makeref(state);
     lua_pop(state, 1);
   } else if(TYPE(ref) != T_FIXNUM) {
     rb_raise(rb_eTypeError, "wrong argument type %s (expected nil)", rb_obj_classname(ref));
   }
-  
+
   rlua_add_ref_finalizer(rbState, ref, self);
 
   rb_iv_set(self, "@ref", ref);
-  
+
   return self;
 }
 
@@ -301,9 +284,9 @@ static VALUE rbLuaTable_next(VALUE self, VALUE table, VALUE index)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(table, "@state"), lua_State, state);
-  
+
   VALUE retval;
-  
+
   rlua_push_var(state, table);                     // stack: |this|...
   rlua_push_var(state, index);                     //        |indx|this|...
   if(lua_next(state, -2) != 0) {                   //        |valu|key |this|...
@@ -312,7 +295,7 @@ static VALUE rbLuaTable_next(VALUE self, VALUE table, VALUE index)
     lua_pop(state, 1);                             //        |key |this|...
     key = rlua_get_var(state);                     //        |key |this|...
     lua_pop(state, 2);                             //        ...
-    
+
     retval = rb_ary_new();
     rb_ary_push(retval, key);
     rb_ary_push(retval, value);
@@ -320,7 +303,7 @@ static VALUE rbLuaTable_next(VALUE self, VALUE table, VALUE index)
     retval = Qnil;
     lua_pop(state, 1);                             //        ...
   }
-  
+
   return retval;
 }
 
@@ -334,14 +317,14 @@ static VALUE rbLuaTable_get(VALUE self, VALUE index)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   VALUE value;
   rlua_push_var(state, self);                      // stack: |this|...
   rlua_push_var(state, index);                     //        |indx|this|...
   lua_gettable(state, -2);                         //        |valu|this|...
   value = rlua_get_var(state);                     //        |valu|this|...
   lua_pop(state, 2);                               //        ...
-  
+
   return value;
 }
 
@@ -375,14 +358,14 @@ static VALUE rbLuaTable_rawget(VALUE self, VALUE index)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   VALUE value;
   rlua_push_var(state, self);                      // stack: |this|...
   rlua_push_var(state, index);                     //        |indx|this|...
   lua_rawget(state, -2);                           //        |valu|this|...
   value = rlua_get_var(state);                     //        |valu|this|...
   lua_pop(state, 2);                               //        ...
-  
+
   return value;
 }
 
@@ -417,12 +400,12 @@ static VALUE rbLuaTable_length(VALUE self)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   VALUE length;
   rlua_push_var(state, self);                      // stack: |this|...
   length = INT2FIX(lua_objlen(state, -1));
   lua_pop(state, 1);                               //        ...
-  
+
   return length;
 }
 
@@ -459,17 +442,17 @@ static VALUE rbLuaTable_method_missing(int argc, VALUE* argv, VALUE self)
   rb_scan_args(argc, argv, "1*", &id, &args);
 
   VALUE name = rb_str_new2(rb_id2name(rb_to_id(id)));
-  
+
   int is_method = 0;
   int is_assign = 0;
   if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '!')
     is_method = 1;
   if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '=')
     is_assign = 1;
-  
+
   if(is_method || is_assign)
     rb_str_resize(name, RSTRING_LEN(name) - 1);
-  
+
   if(is_assign) {
     VALUE value;
     rb_scan_args(argc, argv, "11", &id, &value);
@@ -495,24 +478,24 @@ static int call_ruby_proc(lua_State* state)
   int i;
   int argc = lua_gettop(state);
   VALUE proc, args;
-  
+
   proc = (VALUE) lua_touserdata(state, lua_upvalueindex(1));
   args = rb_ary_new();
-  
+
   for(i = 0; i < argc; i++) {
     rb_ary_unshift(args, rlua_get_var(state));
     lua_pop(state, 1);
   }
-  
+
   VALUE retval = rb_apply(proc, rb_intern("call"), args);
-  
+
   if(rb_obj_class(retval) == cLuaMultret) {
     VALUE array = rb_iv_get(retval, "@args");
     int i;
-    
+
     for(i = 0; i < RARRAY_LEN(array); i++)
       rlua_push_var(state, RARRAY_PTR(array)[i]);
-    
+
     return RARRAY_LEN(array);
   } else {
     rlua_push_var(state, retval);
@@ -532,18 +515,18 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
 {
   VALUE rbLuaState, ref = Qnil, func;
   rb_scan_args(argc, argv, "11", &rbLuaState, &func);
-  
+
   if(rb_obj_class(rbLuaState) != cLuaState)
     rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::State)", rb_obj_classname(rbLuaState));
-  
+
   VALUE rbState = rb_iv_get(rbLuaState, "@state");
   rb_iv_set(self, "@state", rbState);
-  
+
   lua_State* state;
   Data_Get_Struct(rbState, lua_State, state);
-  
+
   VALUE proc = Qnil;
-  
+
   if(TYPE(func) == T_FIXNUM)
     ref = func;
   else if(rb_respond_to(func, rb_intern("call")))
@@ -556,15 +539,15 @@ static VALUE rbLuaFunction_initialize(int argc, VALUE* argv, VALUE self)
     lua_pushcclosure(state, call_ruby_proc, 1);
     ref = rlua_makeref(state);
     lua_pop(state, 1);
-    
+
     // don't allow GC to collect proc
     rb_iv_set(self, "@proc", proc);
   }
-  
+
   rlua_add_ref_finalizer(rbState, ref, self);
 
   rb_iv_set(self, "@ref", ref);
-  
+
   return self;
 }
 
@@ -636,19 +619,19 @@ static VALUE rbLuaFunction_call(VALUE self, VALUE args)
 static VALUE rbLua_initialize(VALUE self)
 {
   lua_State* state = luaL_newstate();
-  
+
   VALUE rbState = Data_Wrap_Struct(rb_cObject, 0, lua_close, state);
   rb_iv_set(self, "@state", rbState);
-  
+
   lua_pushlightuserdata(state, (void*) self);
   lua_setfield(state, LUA_REGISTRYINDEX, "rlua_state");
-  
+
   lua_newtable(state);
   lua_setfield(state, LUA_REGISTRYINDEX, "rlua");
-  
+
   rb_iv_set(rbState, "@refs", rb_hash_new());
   rb_iv_set(rbState, "@procs", rb_ary_new());
-  
+
   return self;
 }
 
@@ -671,12 +654,12 @@ static VALUE rbLua_eval(int argc, VALUE* argv, VALUE self)
 
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   if(chunkname == Qnil)
     chunkname = rb_str_new2("=<eval>");
 
   rlua_load_string(state, code, chunkname);
-  
+
   return rlua_pcall(state, 0);
 }
 
@@ -689,7 +672,7 @@ static VALUE rbLua_get_env(VALUE self)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   VALUE ref;
   rlua_push_var(state, self);                   // stack: |this|...
   lua_getfenv(state, -1);                       //        |envi|this|...
@@ -709,7 +692,7 @@ static VALUE rbLua_set_env(VALUE self, VALUE env)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   if(rb_obj_class(env) != cLuaTable && TYPE(env) != T_HASH)
     rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table or Hash)", rb_obj_classname(env));
 
@@ -717,7 +700,7 @@ static VALUE rbLua_set_env(VALUE self, VALUE env)
   rlua_push_var(state, env);                       //        |envi|this|...
   lua_setfenv(state, -2);                          //        |this|...
   lua_pop(state, 1);                               //        ...
-  
+
   return env;
 }
 
@@ -732,16 +715,16 @@ static VALUE rbLua_get_metatable(VALUE self, VALUE object)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   rlua_push_var(state, object);                 // stack: |objt|...
   if(lua_getmetatable(state, -1)) {             //        |meta|objt|...
     VALUE ref = rlua_makeref(state);            //        |meta|objt|...
     lua_pop(state, 2);                          //        ...
-    
+
     return rb_funcall(cLuaTable, rb_intern("new"), 2, self, ref);
   } else {                                      //        |objt|...
     lua_pop(state, 1);                          //        ...
-    
+
     return Qnil;
   }
 }
@@ -762,7 +745,7 @@ static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   if(rb_obj_class(metatable) != cLuaTable && TYPE(metatable) != T_HASH)
     rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table or Hash)", rb_obj_classname(metatable));
 
@@ -770,7 +753,7 @@ static VALUE rbLua_set_metatable(VALUE self, VALUE object, VALUE metatable)
   rlua_push_var(state, metatable);                 //        |meta|objt|...
   lua_setmetatable(state, -2);                     //        |objt|...
   lua_pop(state, 1);                               //        ...
-  
+
   return metatable;
 }
 
@@ -1086,21 +1069,21 @@ static VALUE rbLua_bootstrap(VALUE self)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   int nf;
   for(nf = 0; nf < sizeof(stdlib) / sizeof(stdlib[0]); nf++) {
     lua_pushcclosure(state, stdlib[nf].func, 0);
     lua_setglobal(state, stdlib[nf].name);
   }
-  
+
   lua_pushcfunction(state, bootstrap_next);
   lua_pushcclosure(state, bootstrap_pairs, 1);
   lua_setglobal(state, "pairs");
-  
+
   lua_pushcfunction(state, bootstrap_inext);
   lua_pushcclosure(state, bootstrap_ipairs, 1);
   lua_setglobal(state, "ipairs");
-  
+
   return Qtrue;
 }
 
@@ -1140,7 +1123,7 @@ static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
 {
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-  
+
   if(rb_ary_includes(args, ID2SYM(rb_intern("all")))) {
     luaL_openlibs(state);
   } else {
@@ -1161,7 +1144,7 @@ static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
     if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_LOADLIBNAME))))
       rlua_openlib(state, luaopen_package);
   }
-  
+
   return Qtrue;
 }
 
@@ -1171,7 +1154,7 @@ void Init_rlua()
    * Main module that encapsulates all RLua classes and methods.
    */
   mLua = rb_define_module("Lua");
-  
+
   /*
    * Lua::State represents Lua interpreter state which is one thread of
    * execution.
