@@ -10,6 +10,7 @@ Gem::Specification.new do |gem|
   code of each language from other one.
   EOD
   gem.homepage      = "http://whitequark.github.com/rlua/"
+  gem.license       = "MIT"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
