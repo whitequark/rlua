@@ -10,12 +10,40 @@ RLua is distributed as gem package through rubygems.org, so the procedure is
 quite usual. It uses native Lua C API, so it will need to compile an extension
 during installation.
 
-On Linux, you will need to install Lua development files first.
+== Linux
+You will need to install Lua development files first.
 They are packaged as <tt>liblua5.1-dev</tt> in Debian and it's derivatives
 (like Ubuntu). After that you can simply run <tt>gem install rlua</tt>.
 
-On Windows, you will need MSVC to compile everything. Through I did not tested
-this (and so cannot provide a detailed description), it should work fine.
+== Windows
+You will need to download and install {Lua for Windows}[http://code.google.com/p/luaforwindows/].
+Be sure to install it to a path without spaces such as <tt>C:\Lua5.1</tt>.  <em>DO NOT
+USE THE DEFAULT PATH!</em> The installer appears to have problems spaces in path
+names.
+
+You will have to add the <tt>lib</tt> directory to you <tt>%PATH%</tt> in order to use the
+installed gem.
+
+The following is a transcript of commands you might find helpful to run after
+installing Lua for Windows:
+
+  rem Specify the path to where you installed the Ruby DevKit (from http://rubyinstaller.org).
+  rem This configures your path to use the DevKit to build the extension.
+  C:\RubyDevKit\devkitvars.bat
+
+  rem Now we configure your path to include the Lua `lib` directory. Do this
+  rem in your system path if you want it to be persistant after closing the shell.
+  rem Be sure to replace the path below with the path you used to install Lua.
+  set PATH=C:\Lua5.1\lib;%PATH%
+
+  rem Finally, we can install the gem.
+  gem install rlua -v 1.1.beta1
+
+  rem To check if the install worked, you can run this:
+  ruby -e "require 'rlua'"
+
+  rem If the previous command terminates without producing output, you have a
+  rem successful installation. Congratulations!
 
 = Example code
 
