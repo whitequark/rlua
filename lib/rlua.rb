@@ -1,4 +1,4 @@
-require 'rlua.so'
+require 'rlua/rlua.so'
 
 module Lua
   class Table
