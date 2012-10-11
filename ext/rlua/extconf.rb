@@ -7,4 +7,4 @@ unless have_library('lua5.1', 'luaL_newstate') or have_library('lua.5.1', 'luaL_
   exit 1
 end
 
-create_makefile("rlua")
+create_makefile("rlua/rlua")
