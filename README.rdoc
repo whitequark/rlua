@@ -37,7 +37,7 @@ installing Lua for Windows:
   set PATH=C:\Lua5.1\lib;%PATH%
 
   rem Finally, we can install the gem.
-  gem install rlua -v 1.1.beta1
+  gem install rlua -v 1.1.beta1 -- --with-lua5.1-dir=C:\Lua5.1 --with-lua5.1-include=C:\Lua5.1\include
 
   rem To check if the install worked, you can run this:
   ruby -e "require 'rlua'"
