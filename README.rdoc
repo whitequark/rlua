@@ -21,8 +21,8 @@ Be sure to install it to a path without spaces such as <tt>C:\Lua5.1</tt>.  <em>
 USE THE DEFAULT PATH!</em> The installer appears to have problems spaces in path
 names.
 
-You will have to add the <tt>lib</tt> directory to you <tt>%PATH%</tt> in order to use the
-installed gem.
+You will have to add the <tt>lib</tt> directory to your <tt>%PATH%</tt> in
+order to use the installed gem.
 
 The following is a transcript of commands you might find helpful to run after
 installing Lua for Windows:
