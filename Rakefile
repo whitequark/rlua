@@ -1,5 +1,8 @@
 require 'bundler/gem_tasks'
+require 'rspec/core/rake_task'
 require 'rdoc/task'
+
+RSpec::Core::RakeTask.new(:test)
 
 Rake::RDocTask.new do |rd|
   rd.main        = 'README.rdoc'

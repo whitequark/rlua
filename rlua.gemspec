@@ -23,6 +23,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rdoc'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'hanna-nouveau'
+  gem.add_development_dependency 'rspec'
 
   gem.extra_rdoc_files = Dir['*.rdoc', 'ext/*.c'].to_a
   gem.rdoc_options     = ['--main=README.rdoc', '--title=RLua Documentation']
