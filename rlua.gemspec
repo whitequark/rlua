@@ -1,7 +1,7 @@
 Gem::Specification.new do |gem|
   gem.name          = "rlua"
   gem.version       = '1.1.beta1'
-  gem.authors       = ["Peter Zotov"]
+  gem.authors       = ["whitequark"]
   gem.email         = ["whitequark@whitequark.org"]
   gem.description   = %q{Ruby to Lua bindings}
   gem.summary       = <<-EOD
