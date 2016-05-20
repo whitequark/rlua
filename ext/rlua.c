@@ -3,6 +3,7 @@
 #include <lua5.1/lauxlib.h>
 #include <lua5.1/lualib.h>
 #include <ctype.h>
+#include <ruby/encoding.h>
 
 VALUE mLua, cLuaState, cLuaMultret, cLuaFunction, cLuaTable;
 
@@ -77,7 +78,7 @@ static VALUE rlua_get_var(lua_State *state)
       size_t length;
       const char* string;
       string = lua_tolstring(state, -1, &length);
-      return rb_str_new(string, length);
+      return rb_enc_str_new(string, length, rb_default_external_encoding());
     }
 
     case LUA_TTABLE:
@@ -98,10 +99,13 @@ static void rlua_push_var(lua_State *state, VALUE value)
       lua_pushnil(state);
       break;
 
-    case T_STRING:
-      lua_pushlstring(state, RSTRING_PTR(value), RSTRING_LEN(value));
-      break;
+    case T_STRING: {
+      const char* string;
+      string = rb_str_export_to_enc(value, rb_default_external_encoding());
 
+      lua_pushlstring(state, RSTRING_PTR(string), RSTRING_LEN(string));
+      break;
+    }
     case T_FIXNUM:
       lua_pushnumber(state, FIX2INT(value));
       break;
