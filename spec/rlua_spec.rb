@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'rlua'
 
 describe Lua::State do
@@ -37,5 +38,33 @@ describe Lua::State do
 
       expect(subject.ran).to be_truthy
     end
+
+    context 'string encoding' do
+      before { Encoding.default_external = Encoding::UTF_8 }
+
+      it 'creates a string in Lua and pass it to Ruby with default_external encoding' do
+        subject.__eval 'value = "höhöhö"'
+
+        expect(subject.value).to eq 'höhöhö'
+        expect(subject.value.encoding).to eq Encoding::UTF_8
+      end
+
+      it 'creates a string in Lua and pass it to Ruby with custom default_external encoding' do
+        Encoding.default_external = Encoding::ISO8859_15
+
+        subject.__eval 'value = "höhöhö"'.encode(Encoding::ISO8859_15)
+
+        expect(subject.value).to eq 'höhöhö'.encode(Encoding::ISO8859_15)
+        expect(subject.value.encoding).to eq Encoding::ISO8859_15
+      end
+
+      it 'creates a string in Lua and pass it to Ruby with default_external encoding' do
+        subject.value = 'höhöhö'.encode(Encoding::EUCJP_MS)
+
+        expect(subject.value).to eq 'höhöhö'
+        expect(subject.value.encoding).to eq Encoding.default_external
+      end
+    end
+
   end
 end
