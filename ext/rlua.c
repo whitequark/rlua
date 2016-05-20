@@ -100,9 +100,7 @@ static void rlua_push_var(lua_State *state, VALUE value)
       break;
 
     case T_STRING: {
-      const char* string;
-      string = rb_str_export_to_enc(value, rb_default_external_encoding());
-
+      VALUE string = rb_str_export_to_enc(value, rb_default_external_encoding());
       lua_pushlstring(state, RSTRING_PTR(string), RSTRING_LEN(string));
       break;
     }
@@ -1040,7 +1038,7 @@ static int bootstrap_xpcall (lua_State *L) {
 }
 
 static const
-  struct { char* name; lua_CFunction func; }
+  struct { const char* name; lua_CFunction func; }
   stdlib[] = {
     { "type",     bootstrap_type     },
     { "next",     bootstrap_next     },
@@ -1074,8 +1072,7 @@ static VALUE rbLua_bootstrap(VALUE self)
   lua_State* state;
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
 
-  int nf;
-  for(nf = 0; nf < sizeof(stdlib) / sizeof(stdlib[0]); nf++) {
+  for(size_t nf = 0; nf < sizeof(stdlib) / sizeof(stdlib[0]); nf++) {
     lua_pushcclosure(state, stdlib[nf].func, 0);
     lua_setglobal(state, stdlib[nf].name);
   }

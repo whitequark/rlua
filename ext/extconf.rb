@@ -1,5 +1,7 @@
 require "mkmf"
 
+$CFLAGS += " -Wno-declaration-after-statement"
+
 dir_config('lua5.1')
 
 unless have_library('lua5.1', 'luaL_newstate') or have_library('lua.5.1', 'luaL_newstate')
