@@ -3,7 +3,7 @@ RLua is Ruby to Lua bindings library that features nearly complete coverage of L
 C API, seamless translation of Lua and Ruby objects into each other, calling Lua
 functions from Ruby and vice versa.
 
-RLua currently uses Lua 5.1, and is Ruby 1.8.7 and 1.9.x compatible.
+RLua currently uses Lua 5.1, and is Ruby 1.9+ compatible.
 
 = Installation
 RLua is distributed as gem package through rubygems.org, so the procedure is
