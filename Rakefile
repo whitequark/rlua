@@ -1,8 +1,13 @@
 require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 require 'rdoc/task'
+require 'rake/extensiontask'
 
-RSpec::Core::RakeTask.new(:test)
+RSpec::Core::RakeTask.new(:test => [:compile])
+
+Rake::ExtensionTask.new 'rlua' do |ext|
+  ext.ext_dir = 'ext'
+end
 
 Rake::RDocTask.new do |rd|
   rd.main        = 'README.rdoc'
