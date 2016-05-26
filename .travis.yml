@@ -1,4 +1,4 @@
-script: bundle exec rake test
+sudo: true
 language: ruby
 rvm:
   - ruby-head
@@ -6,13 +6,12 @@ rvm:
   - 2.1
   - 2.2
   - 2.3
-
 matrix:
   allow_failures:
     - rvm: ruby-head
-
 cache: bundler
-sudo: true
 before_install:
+  - gem install bundler
   - sudo apt-get update -qq
   - sudo apt-get install -y liblua5.1-dev
+script: bundle exec rake test
