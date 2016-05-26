@@ -83,7 +83,7 @@ Everything not currently implemented is described in
 {TODO list}[link:files/TODO_rdoc.html].
 
 = Author
-RLua is currently developed solely by Peter Zotov
+RLua is currently developed solely by whitequark
 (whitequark@whitequark.org[mailto:whitequark@whitequark.org]).
 Feel free to email me if you encounter any bugs.
 
