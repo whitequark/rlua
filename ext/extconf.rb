@@ -1,6 +1,6 @@
 require "mkmf"
 
-$CFLAGS += " -Wno-declaration-after-statement"
+$CFLAGS += " -std=c99 -Wno-declaration-after-statement"
 
 dir_config('lua5.1')
 
