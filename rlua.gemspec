@@ -21,6 +21,7 @@ Gem::Specification.new do |gem|
   gem.required_ruby_version = '>= 1.9.3'
   gem.requirements << 'liblua 5.1'
 
+  gem.add_development_dependency 'bundler', '~> 1.10'
   gem.add_development_dependency 'rdoc'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'rake-compiler'
