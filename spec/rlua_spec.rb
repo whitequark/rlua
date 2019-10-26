@@ -66,5 +66,70 @@ describe Lua::State do
       end
     end
 
+    context 'bootstrap' do
+      before { subject.__bootstrap }
+
+      describe 'tonumber' do
+        it 'converts string without specifying a base' do
+          subject.__eval 'value = tonumber("42")'
+
+          expect(subject.value).to eq 42
+        end
+
+        it 'converts string using specified base' do
+          subject.__eval 'value = tonumber("42", 13)'
+
+          expect(subject.value).to eq 54
+        end
+      end
+
+      describe 'tostring' do
+        it 'converts number to string' do
+          subject.__eval 'value = tostring(42)'
+
+          expect(subject.value).to eq '42'
+        end
+
+        it 'converts string to string' do
+          subject.__eval 'value = tostring("zaphod")'
+
+          expect(subject.value).to eq 'zaphod'
+        end
+      end
+
+      describe 'error' do
+        it 'raises a runtime error' do
+          expect {
+            subject.__eval 'error("bleepbloop")'
+          }.to raise_error(RuntimeError, "<eval>:1: bleepbloop")
+        end
+      end
+
+      describe 'type' do
+        it 'identifies strings' do
+          subject.__eval 'value = type("zaphod")'
+
+          expect(subject.value).to eq 'string'
+        end
+
+        it 'identifies booleans' do
+          subject.__eval 'value = type(true)'
+
+          expect(subject.value).to eq 'boolean'
+        end
+
+        it 'identifies numbers' do
+          subject.__eval 'value = type(42)'
+
+          expect(subject.value).to eq 'number'
+        end
+
+        it 'identifies tables' do
+          subject.__eval 'value = type({"trillian"})'
+
+          expect(subject.value).to eq 'table'
+        end
+      end
+    end
   end
 end

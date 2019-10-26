@@ -3,7 +3,7 @@ RLua is Ruby to Lua bindings library that features nearly complete coverage of L
 C API, seamless translation of Lua and Ruby objects into each other, calling Lua
 functions from Ruby and vice versa.
 
-RLua currently uses Lua 5.1, and is Ruby 1.9+ compatible.
+RLua currently uses Lua 5.4, and is Ruby 1.9+ compatible.
 
 = Installation
 RLua is distributed as gem package through rubygems.org, so the procedure is
@@ -11,7 +11,7 @@ quite usual. It uses native Lua C API, so it will need to compile an extension
 during installation.
 
 On Linux, you will need to install Lua development files first.
-They are packaged as <tt>liblua5.1-dev</tt> in Debian and it's derivatives
+They are packaged as <tt>liblua5.4-dev</tt> in Debian and it's derivatives
 (like Ubuntu). After that you can simply run <tt>gem install rlua</tt>.
 
 On Windows, you will need MSVC to compile everything. Through I did not tested
