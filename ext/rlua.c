@@ -1,7 +1,7 @@
 #include <ruby.h>
-#include <lua5.1/lua.h>
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
+#include <lua5.3/lua.h>
+#include <lua5.3/lauxlib.h>
+#include <lua5.3/lualib.h>
 #include <ctype.h>
 #include <ruby/encoding.h>
 
@@ -186,7 +186,7 @@ static void rlua_load_string(lua_State* state, VALUE code, VALUE chunkname)
   // do not interfere with users' string
   VALUE interm_code = rb_str_new3(code);
 
-  int retval = lua_load(state, rlua_reader, (void*) interm_code, RSTRING_PTR(chunkname));
+  int retval = lua_load(state, rlua_reader, (void*) interm_code, RSTRING_PTR(chunkname), NULL);
   if(retval != 0) {
     size_t errlen;
     const char* errstr = lua_tolstring(state, -1, &errlen);
@@ -405,7 +405,7 @@ static VALUE rbLuaTable_length(VALUE self)
 
   VALUE length;
   rlua_push_var(state, self);                      // stack: |this|...
-  length = INT2FIX(lua_objlen(state, -1));
+  length = INT2FIX(lua_rawlen(state, -1));
   lua_pop(state, 1);                               //        ...
 
   return length;
@@ -666,47 +666,6 @@ static VALUE rbLua_eval(int argc, VALUE* argv, VALUE self)
 }
 
 /*
- * call-seq: object.__env() -> Lua::Table
- *
- * Returns environment table of Lua::State or Lua::Function.
- */
-static VALUE rbLua_get_env(VALUE self)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  VALUE ref;
-  rlua_push_var(state, self);                   // stack: |this|...
-  lua_getfenv(state, -1);                       //        |envi|this|...
-  ref = rlua_makeref(state);                    //        |envi|this|...
-  lua_pop(state, 2);                            //        ...
-
-  return rb_funcall(cLuaTable, rb_intern("new"), 2, self, ref);
-}
-
-/*
- * call-seq: object.__env=(table) -> table
- *
- * Sets environment table for Lua::State or Lua::Function. +table+ may be
- * a Lua::Table or a Hash.
- */
-static VALUE rbLua_set_env(VALUE self, VALUE env)
-{
-  lua_State* state;
-  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
-
-  if(rb_obj_class(env) != cLuaTable && TYPE(env) != T_HASH)
-    rb_raise(rb_eTypeError, "wrong argument type %s (expected Lua::Table or Hash)", rb_obj_classname(env));
-
-  rlua_push_var(state, self);                      // stack: |this|...
-  rlua_push_var(state, env);                       //        |envi|this|...
-  lua_setfenv(state, -2);                          //        |this|...
-  lua_pop(state, 1);                               //        ...
-
-  return env;
-}
-
-/*
  * call-seq: state.__get_metatable(object) -> Lua::Table or nil
  *
  * Returns metatable of any valid Lua object or nil if it is not present.
@@ -786,8 +745,19 @@ static VALUE rbLuaTable_set_metatable(VALUE self, VALUE metatable)
  */
 static VALUE rbLua_get_global(VALUE self, VALUE index)
 {
-  VALUE globals = rbLua_get_env(self);
-  return rbLuaTable_get(globals, index);
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  if (TYPE(index) != T_STRING) {
+    rb_raise(rb_eTypeError, "wrong argument type %s", rb_obj_classname(index));
+    return Qnil;
+  }
+
+  lua_getglobal(state, StringValueCStr(index));
+  VALUE value = rlua_get_var(state);
+  lua_pop(state, 1);
+
+  return value;
 }
 
 /*
@@ -797,7 +767,18 @@ static VALUE rbLua_get_global(VALUE self, VALUE index)
  */
 static VALUE rbLua_set_global(VALUE self, VALUE index, VALUE value)
 {
-  return rbLuaTable_set(rbLua_get_env(self), index, value);
+  lua_State* state;
+  Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
+
+  if (TYPE(index) != T_STRING) {
+    rb_raise(rb_eTypeError, "wrong argument type %s", rb_obj_classname(index));
+    return Qnil;
+  }
+
+  rlua_push_var(state, value);
+  lua_setglobal(state, StringValueCStr(index));
+
+  return value;
 }
 
 /*
@@ -811,10 +792,10 @@ static VALUE rbLua_equal(VALUE self, VALUE other)
   Data_Get_Struct(rb_iv_get(self, "@state"), lua_State, state);
 
   int equal;
-  rlua_push_var(state, self);           // stack: |this|...
-  rlua_push_var(state, other);          //        |othr|this|...
-  equal = lua_equal(state, -1, -2);     //        |othr|this|...
-  lua_pop(state, 2);                    //        ...
+  rlua_push_var(state, self);                       // stack: |this|...
+  rlua_push_var(state, other);                      //        |othr|this|...
+  equal = lua_compare(state, -1, -2, LUA_OPEQ);     //        |othr|this|...
+  lua_pop(state, 2);                                //        ...
 
   return equal ? Qtrue : Qfalse;
 }
@@ -845,7 +826,39 @@ static VALUE rbLua_rawequal(VALUE self, VALUE other)
  */
 static VALUE rbLua_method_missing(int argc, VALUE* argv, VALUE self)
 {
-  return rbLuaTable_method_missing(argc, argv, rbLua_get_env(self));
+  VALUE id, args;
+  rb_scan_args(argc, argv, "1*", &id, &args);
+
+  VALUE name = rb_str_new2(rb_id2name(rb_to_id(id)));
+
+  int is_method = 0;
+  int is_assign = 0;
+  if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '!')
+    is_method = 1;
+  if(RSTRING_PTR(name)[RSTRING_LEN(name) - 1] == '=')
+    is_assign = 1;
+
+  if(is_method || is_assign)
+    rb_str_resize(name, RSTRING_LEN(name) - 1);
+
+  if(is_assign) {
+    VALUE value;
+    rb_scan_args(argc, argv, "11", &id, &value);
+    return rbLua_set_global(self, name, value);
+  } else {
+    VALUE value = rbLua_get_global(self, name);
+    if(value == Qnil) {
+      return rb_call_super(argc, argv);
+    } else if(rb_obj_class(value) != cLuaFunction) {
+      if(is_method)
+        rb_raise(rb_eTypeError, "%s is not a Lua::Function", RSTRING_PTR(name));
+      return value;
+    } else {
+      if(is_method)
+        rb_ary_unshift(args, self);
+      return rbLuaFunction_call(value, args);
+    }
+  }
 }
 
 /*
@@ -871,64 +884,72 @@ static VALUE rbLua_multret(VALUE self, VALUE args)
   return rb_funcall(cLuaMultret, rb_intern("new"), 1, args);
 }
 
-// bootstrap* are from Lua5.1 source
+// bootstrap* are from Lua5.3 source
+#define SPACECHARS	" \f\n\r\t\v"
+
+static const char *b_str2int (const char *s, int base, lua_Integer *pn) {
+  lua_Unsigned n = 0;
+  int neg = 0;
+  s += strspn(s, SPACECHARS);  /* skip initial spaces */
+  if (*s == '-') { s++; neg = 1; }  /* handle sign */
+  else if (*s == '+') s++;
+  if (!isalnum((unsigned char)*s))  /* no digit? */
+    return NULL;
+  do {
+    int digit = (isdigit((unsigned char)*s)) ? *s - '0'
+                   : (toupper((unsigned char)*s) - 'A') + 10;
+    if (digit >= base) return NULL;  /* invalid numeral */
+    n = n * base + digit;
+    s++;
+  } while (isalnum((unsigned char)*s));
+  s += strspn(s, SPACECHARS);  /* skip trailing spaces */
+  *pn = (lua_Integer)((neg) ? (0u - n) : n);
+  return s;
+}
 
 static int bootstrap_tonumber (lua_State *L) {
-  int base = luaL_optint(L, 2, 10);
-  if (base == 10) {  /* standard conversion */
-    luaL_checkany(L, 1);
-    if (lua_isnumber(L, 1)) {
-      lua_pushnumber(L, lua_tonumber(L, 1));
+  if (lua_isnoneornil(L, 2)) {  /* standard conversion? */
+    if (lua_type(L, 1) == LUA_TNUMBER) {  /* already a number? */
+      lua_settop(L, 1);  /* yes; return it */
       return 1;
+    }
+    else {
+      size_t l;
+      const char *s = lua_tolstring(L, 1, &l);
+      if (s != NULL && lua_stringtonumber(L, s) == l + 1)
+        return 1;  /* successful conversion to number */
+      /* else not a number */
+      luaL_checkany(L, 1);  /* (but there must be some parameter) */
     }
   }
   else {
-    const char *s1 = luaL_checkstring(L, 1);
-    char *s2;
-    unsigned long n;
+    size_t l;
+    const char *s;
+    lua_Integer n = 0;  /* to avoid warnings */
+    lua_Integer base = luaL_checkinteger(L, 2);
+    luaL_checktype(L, 1, LUA_TSTRING);  /* no numbers as strings */
+    s = lua_tolstring(L, 1, &l);
     luaL_argcheck(L, 2 <= base && base <= 36, 2, "base out of range");
-    n = strtoul(s1, &s2, base);
-    if (s1 != s2) {  /* at least one valid digit? */
-      while (isspace((unsigned char)(*s2))) s2++;  /* skip trailing spaces */
-      if (*s2 == '\0') {  /* no invalid trailing characters? */
-        lua_pushnumber(L, (lua_Number)n);
-        return 1;
-      }
-    }
-  }
-  lua_pushnil(L);  /* else not a number */
+    if (b_str2int(s, (int)base, &n) == s + l) {
+      lua_pushinteger(L, n);
+      return 1;
+    }  /* else not a number */
+  }  /* else not a number */
+  lua_pushnil(L);  /* not a number */
   return 1;
 }
 
 static int bootstrap_tostring (lua_State *L) {
   luaL_checkany(L, 1);
-  if (luaL_callmeta(L, 1, "__tostring"))  /* is there a metafield? */
-    return 1;  /* use its value */
-  switch (lua_type(L, 1)) {
-    case LUA_TNUMBER:
-      lua_pushstring(L, lua_tostring(L, 1));
-      break;
-    case LUA_TSTRING:
-      lua_pushvalue(L, 1);
-      break;
-    case LUA_TBOOLEAN:
-      lua_pushstring(L, (lua_toboolean(L, 1) ? "true" : "false"));
-      break;
-    case LUA_TNIL:
-      lua_pushliteral(L, "nil");
-      break;
-    default:
-      lua_pushfstring(L, "%s: %p", luaL_typename(L, 1), lua_topointer(L, 1));
-      break;
-  }
+  luaL_tolstring(L, 1, NULL);
   return 1;
 }
 
 static int bootstrap_error (lua_State *L) {
-  int level = luaL_optint(L, 2, 1);
+  int level = (int)luaL_optinteger(L, 2, 1);
   lua_settop(L, 1);
-  if (lua_isstring(L, 1) && level > 0) {  /* add extra information? */
-    luaL_where(L, level);
+  if (lua_type(L, 1) == LUA_TSTRING && level > 0) {
+    luaL_where(L, level);   /* add extra information */
     lua_pushvalue(L, 1);
     lua_concat(L, 2);
   }
@@ -936,11 +957,11 @@ static int bootstrap_error (lua_State *L) {
 }
 
 static int bootstrap_type (lua_State *L) {
-  luaL_checkany(L, 1);
-  lua_pushstring(L, luaL_typename(L, 1));
+  int t = lua_type(L, 1);
+  luaL_argcheck(L, t != LUA_TNONE, 1, "value expected");
+  lua_pushstring(L, lua_typename(L, t));
   return 1;
 }
-
 
 static int bootstrap_next (lua_State *L) {
   luaL_checktype(L, 1, LUA_TTABLE);
@@ -953,18 +974,22 @@ static int bootstrap_next (lua_State *L) {
   }
 }
 
-
 static int bootstrap_pairs (lua_State *L) {
-  luaL_checktype(L, 1, LUA_TTABLE);
-  lua_pushvalue(L, lua_upvalueindex(1));  /* return generator, */
-  lua_pushvalue(L, 1);  /* state, */
-  lua_pushnil(L);  /* and initial value */
+  luaL_checkany(L, 1);
+  if (luaL_getmetafield(L, 1, "__pairs") == LUA_TNIL) {  /* no metamethod? */
+    lua_pushcfunction(L, bootstrap_next);  /* will return generator, */
+    lua_pushvalue(L, 1);  /* state, */
+    lua_pushnil(L);  /* and initial value */
+  }
+  else {
+    lua_pushvalue(L, 1);  /* argument 'self' to metamethod */
+    lua_call(L, 1, 3);  /* get 3 values from metamethod */
+  }
   return 3;
 }
 
-
 static int bootstrap_inext (lua_State *L) {
-  int i = luaL_checkint(L, 2);
+  lua_Integer i = luaL_checkinteger(L, 2);
   luaL_checktype(L, 1, LUA_TTABLE);
   i++;  /* next value */
   lua_pushinteger(L, i);
@@ -972,28 +997,19 @@ static int bootstrap_inext (lua_State *L) {
   return (lua_isnil(L, -1)) ? 0 : 2;
 }
 
+static int ipairsaux (lua_State *L) {
+  lua_Integer i = luaL_checkinteger(L, 2) + 1;
+  lua_pushinteger(L, i);
+  return (lua_geti(L, 1, i) == LUA_TNIL) ? 1 : 2;
+}
 
 static int bootstrap_ipairs (lua_State *L) {
-  luaL_checktype(L, 1, LUA_TTABLE);
-  lua_pushvalue(L, lua_upvalueindex(1));  /* return generator, */
-  lua_pushvalue(L, 1);  /* state, */
-  lua_pushinteger(L, 0);  /* and initial value */
+  luaL_checkany(L, 1);
+  lua_pushcfunction(L, ipairsaux);  /* iteration function */
+  lua_pushvalue(L, 1);  /* state */
+  lua_pushinteger(L, 0);  /* initial value */
   return 3;
 }
-
-static int bootstrap_unpack (lua_State *L) {
-  int i, e, n;
-  luaL_checktype(L, 1, LUA_TTABLE);
-  i = luaL_optint(L, 2, 1);
-  e = luaL_opt(L, luaL_checkint, 3, luaL_getn(L, 1));
-  n = e - i + 1;  /* number of elements */
-  if (n <= 0) return 0;  /* empty range */
-  luaL_checkstack(L, n, "table too big to unpack");
-  for (; i<=e; i++)  /* push arg[i...e] */
-    lua_rawgeti(L, 1, i);
-  return n;
-}
-
 
 static int bootstrap_select (lua_State *L) {
   int n = lua_gettop(L);
@@ -1002,39 +1018,54 @@ static int bootstrap_select (lua_State *L) {
     return 1;
   }
   else {
-    int i = luaL_checkint(L, 1);
+    lua_Integer i = luaL_checkinteger(L, 1);
     if (i < 0) i = n + i;
     else if (i > n) i = n;
     luaL_argcheck(L, 1 <= i, 1, "index out of range");
-    return n - i;
+    return n - (int)i;
   }
 }
 
 static int bootstrap_assert (lua_State *L) {
-  luaL_checkany(L, 1);
-  if (!lua_toboolean(L, 1))
-    return luaL_error(L, "%s", luaL_optstring(L, 2, "assertion failed!"));
-  return lua_gettop(L);
+  if (lua_toboolean(L, 1))  /* condition is true? */
+    return lua_gettop(L);  /* return all arguments */
+  else {  /* error */
+    luaL_checkany(L, 1);  /* there must be a condition */
+    lua_remove(L, 1);  /* remove it */
+    lua_pushliteral(L, "assertion failed!");  /* default message */
+    lua_settop(L, 1);  /* leave only message (default if no other one) */
+    return bootstrap_error(L);  /* call 'error' */
+  }
+}
+
+static int finishpcall (lua_State *L, int status, lua_KContext extra) {
+  if (status != LUA_OK && status != LUA_YIELD) {  /* error? */
+    lua_pushboolean(L, 0);  /* first result (false) */
+    lua_pushvalue(L, -2);  /* error message */
+    return 2;  /* return false, msg */
+  }
+  else
+    return lua_gettop(L) - (int)extra;  /* return all results */
 }
 
 static int bootstrap_pcall (lua_State *L) {
   int status;
   luaL_checkany(L, 1);
-  status = lua_pcall(L, lua_gettop(L) - 1, LUA_MULTRET, 0);
-  lua_pushboolean(L, (status == 0));
-  lua_insert(L, 1);
-  return lua_gettop(L);  /* return status + all results */
+  lua_pushboolean(L, 1);  /* first result if no errors */
+  lua_insert(L, 1);  /* put it in place */
+  status = lua_pcallk(L, lua_gettop(L) - 2, LUA_MULTRET, 0, 0, finishpcall);
+  return finishpcall(L, status, 0);
 }
 
 static int bootstrap_xpcall (lua_State *L) {
   int status;
-  luaL_checkany(L, 2);
-  lua_settop(L, 2);
-  lua_insert(L, 1);  /* put error function under function to be called */
-  status = lua_pcall(L, 0, LUA_MULTRET, 1);
-  lua_pushboolean(L, (status == 0));
-  lua_replace(L, 1);
-  return lua_gettop(L);  /* return status + all results */
+  int n = lua_gettop(L);
+  luaL_checktype(L, 2, LUA_TFUNCTION);  /* check error function */
+  lua_pushboolean(L, 1);  /* first result */
+  lua_pushvalue(L, 1);  /* function */
+  lua_rotate(L, 3, 2);  /* move them below function's arguments */
+  status = lua_pcallk(L, n - 2, LUA_MULTRET, 2, 2, finishpcall);
+  return finishpcall(L, status, 2);
 }
 
 static const
@@ -1044,7 +1075,6 @@ static const
     { "next",     bootstrap_next     },
     { "tonumber", bootstrap_tonumber },
     { "tostring", bootstrap_tostring },
-    { "unpack",   bootstrap_unpack   },
     { "select",   bootstrap_select   },
     { "error",    bootstrap_error    },
     { "assert",   bootstrap_assert   },
@@ -1057,15 +1087,15 @@ static const
  *
  * Deploys an absolute minimum of functions required to write minimally
  * useful Lua programs. This is really a subset of Lua _base_ library
- * (copied from Lua 5.1 sources) that may be handy if you don't like standard
+ * (copied from Lua 5.3 sources) that may be handy if you don't like standard
  * function layout. All of these functions can be implemented in pure Ruby,
  * but that will slow down Lua code incredibly.
  *
  * <b>If you want to get familiar layout described in Lua documentation, check
  * #__load_stdlib function.</b>
  *
- * Exact list of functions defined: type, next, tonumber, tostring, unpack,
- * select, error, assert, pcall, xpcall.
+ * Exact list of functions defined: type, next, tonumber, tostring, select,
+ * error, assert, pcall, xpcall.
  */
 static VALUE rbLua_bootstrap(VALUE self)
 {
@@ -1165,8 +1195,6 @@ void Init_rlua()
   rb_define_method(cLuaState, "__eval", rbLua_eval, -1);
   rb_define_method(cLuaState, "__bootstrap", rbLua_bootstrap, 0);
   rb_define_method(cLuaState, "__load_stdlib", rbLua_load_stdlib, -2);
-  rb_define_method(cLuaState, "__env", rbLua_get_env, 0);
-  rb_define_method(cLuaState, "__env=", rbLua_set_env, 1);
   rb_define_method(cLuaState, "__get_metatable", rbLua_get_metatable, 1);
   rb_define_method(cLuaState, "__set_metatable", rbLua_set_metatable, 2);
   rb_define_method(cLuaState, "[]", rbLua_get_global, 1);
@@ -1199,8 +1227,6 @@ void Init_rlua()
   cLuaFunction = rb_define_class_under(mLua, "Function", rb_cObject);
   rb_define_method(cLuaFunction, "initialize", rbLuaFunction_initialize, -1);
   rb_define_method(cLuaFunction, "call", rbLuaFunction_call, -2);
-  rb_define_method(cLuaFunction, "__env", rbLua_get_env, 0);
-  rb_define_method(cLuaFunction, "__env=", rbLua_set_env, 1);
   rb_define_method(cLuaFunction, "__equal", rbLua_rawequal, 1);
   rb_define_method(cLuaFunction, "==", rbLua_equal, 1);
 
