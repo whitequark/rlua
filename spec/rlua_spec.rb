@@ -248,5 +248,21 @@ describe Lua::State do
         expect(subject.value["a"].class).to eq(Lua::Function)
       end
     end
+
+    context '__load_stdlib' do
+      it "creates a global name for most libraries" do
+        [:math, :table, :utf8, :io, :os, :package].each do |lib|
+          subject.__load_stdlib(lib)
+          subject.__eval "value = (#{lib} == nil)"
+          expect(subject.value).to eq(false)
+        end
+      end
+
+      it "does not create a global name when loading base" do
+        subject.__load_stdlib("base")
+        subject.__eval "value = (base == nil)"
+        expect(subject.value).to eq(true)
+      end
+    end
   end
 end
