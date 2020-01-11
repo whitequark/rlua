@@ -17,7 +17,73 @@ describe Lua::State do
         'zaphod' => lambda { |table| p "Meaning of life: #{table.meaning_of_life}" }
       }
 
-      expect { subject.__eval "ruby:zaphod()" }.to output("\"Meaning of life: 42.0\"\n").to_stdout
+      expect { subject.__eval "ruby:zaphod()" }.to output("\"Meaning of life: 42\"\n").to_stdout
+    end
+
+    describe 'type conversions to lua' do
+      before do
+        subject.__load_stdlib(:base, :math)
+      end
+
+      it 'converts String to string' do
+        subject.value = "hello"
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("string")
+      end
+
+      it 'converts Array to table' do
+        subject.value = [1,2,3]
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("table")
+      end
+
+      it 'converts Hash to table' do
+        subject.value = {'a' => 1, 'b' => 2}
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("table")
+      end
+
+      it 'converts NilClass to nil' do
+        subject.value = nil
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("nil")
+      end
+
+      it 'converts TrueClass to boolean' do
+        subject.value = true
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("boolean")
+      end
+
+      it 'converts FalseClass to boolean' do
+        subject.value = false
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("boolean")
+      end
+
+      it 'converts small Integer to integer' do
+        subject.value = 1
+        subject.__eval 't = math.type(value)'
+        expect(subject.t).to eq("integer")
+      end
+
+      it 'converts large Integer to float' do
+        subject.value = 2**64
+        subject.__eval 't = math.type(value)'
+        expect(subject.t).to eq("float")
+      end
+
+      it 'converts Float to float' do
+        subject.value = 1.0
+        subject.__eval 't = math.type(value)'
+        expect(subject.t).to eq("float")
+      end
+
+      it 'converts Proc to function' do
+        subject.value = ->(x){ x }
+        subject.__eval 't = type(value)'
+        expect(subject.t).to eq("function")
+      end
     end
   end
 
@@ -129,6 +195,57 @@ describe Lua::State do
 
           expect(subject.value).to eq 'table'
         end
+      end
+    end
+
+    describe 'type conversions to ruby' do
+      before do
+        subject.__load_stdlib(:base, :math)
+      end
+
+      it 'converts string to String' do
+        subject.__eval 'value = "hello"'
+        expect(subject.value.class).to eq(String)
+      end
+
+      it 'converts table to Lua::Table' do
+        subject.__eval 'value = {1,2,3}'
+        expect(subject.value.class).to eq(Lua::Table)
+      end
+
+      it 'converts table to Lua::Table' do
+        subject.__eval 'value = { a = 1, b = 2 }'
+        expect(subject.value.class).to eq(Lua::Table)
+      end
+
+      it 'converts nil to NilClass' do
+        subject.__eval 'value = { a = nil }'
+        expect(subject.value["a"].class).to eq(NilClass)
+      end
+
+      it 'converts true to TrueClass' do
+        subject.__eval 'value = true'
+        expect(subject.value.class).to eq(TrueClass)
+      end
+
+      it 'converts false to FalseClass' do
+        subject.__eval 'value = false'
+        expect(subject.value.class).to eq(FalseClass)
+      end
+
+      it 'converts integer to Integer' do
+        subject.__eval 'value = 1'
+        expect(subject.value.integer?).to be(true)
+      end
+
+      it 'converts float to Float' do
+        subject.__eval 'value = 1.0'
+        expect(subject.value.class).to eq(Float)
+      end
+
+      it 'converts function to Lua::Function' do
+        subject.__eval 'value = { a = function(x) print(x) end }'
+        expect(subject.value["a"].class).to eq(Lua::Function)
       end
     end
   end

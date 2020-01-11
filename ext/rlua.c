@@ -72,7 +72,11 @@ static VALUE rlua_get_var(lua_State *state)
       return lua_toboolean(state, -1) ? Qtrue : Qfalse;
 
     case LUA_TNUMBER:
-      return rb_float_new(lua_tonumber(state, -1));
+      if (lua_isinteger(state, -1)) {
+        return INT2FIX(lua_tointeger(state, -1));
+      } else {
+        return rb_float_new(lua_tonumber(state, -1));
+      }
 
     case LUA_TSTRING: {
       size_t length;
@@ -105,7 +109,7 @@ static void rlua_push_var(lua_State *state, VALUE value)
       break;
     }
     case T_FIXNUM:
-      lua_pushnumber(state, FIX2INT(value));
+      lua_pushinteger(state, FIX2LONG(value));
       break;
 
     case T_BIGNUM:
