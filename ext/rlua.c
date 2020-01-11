@@ -1122,11 +1122,27 @@ static VALUE rbLua_bootstrap(VALUE self)
   return Qtrue;
 }
 
-static void rlua_openlib(lua_State* state, lua_CFunction func)
+// from lua5.3/linit.c
+static void rlua_openlib(lua_State* state, const char* name, lua_CFunction func)
 {
-  lua_pushcfunction(state, func);
-  lua_call(state, 0, 0);
+  luaL_requiref(state, name, func, 1);
+  lua_pop(state, 1);  /* remove lib */
 }
+
+static const
+  struct { const char* alias; const char* name; lua_CFunction func; }
+  libs[] = {
+  {"base", "_G", luaopen_base},
+  {NULL, LUA_LOADLIBNAME, luaopen_package},
+  {NULL, LUA_COLIBNAME, luaopen_coroutine},
+  {NULL, LUA_TABLIBNAME, luaopen_table},
+  {NULL, LUA_IOLIBNAME, luaopen_io},
+  {NULL, LUA_OSLIBNAME, luaopen_os},
+  {NULL, LUA_STRLIBNAME, luaopen_string},
+  {NULL, LUA_MATHLIBNAME, luaopen_math},
+  {NULL, LUA_UTF8LIBNAME, luaopen_utf8},
+  {NULL, LUA_DBLIBNAME, luaopen_debug},
+};
 
 /*
  * call-seq: state.__load_stdlib(*libs) -> true
@@ -1162,22 +1178,12 @@ static VALUE rbLua_load_stdlib(VALUE self, VALUE args)
   if(rb_ary_includes(args, ID2SYM(rb_intern("all")))) {
     luaL_openlibs(state);
   } else {
-    if(rb_ary_includes(args, ID2SYM(rb_intern("base"))))
-      rlua_openlib(state, luaopen_base);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_TABLIBNAME))))
-      rlua_openlib(state, luaopen_table);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_MATHLIBNAME))))
-      rlua_openlib(state, luaopen_math);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_STRLIBNAME))))
-      rlua_openlib(state, luaopen_string);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_DBLIBNAME))))
-      rlua_openlib(state, luaopen_debug);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_IOLIBNAME))))
-      rlua_openlib(state, luaopen_io);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_OSLIBNAME))))
-      rlua_openlib(state, luaopen_os);
-    if(rb_ary_includes(args, ID2SYM(rb_intern(LUA_LOADLIBNAME))))
-      rlua_openlib(state, luaopen_package);
+    for(size_t nl = 0; nl < sizeof(libs) / sizeof(libs[0]); nl++) {
+      const char* name = libs[nl].alias != NULL ? libs[nl].alias : libs[nl].name;
+      if (rb_ary_includes(args, ID2SYM(rb_intern(name)))) {
+        rlua_openlib(state, libs[nl].name, libs[nl].func);
+      }
+    }
   }
 
   return Qtrue;
